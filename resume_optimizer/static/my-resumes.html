@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>我的简历 - AI智简历</title>
 <link rel="stylesheet" href="/static/css/app.css?v=20261004c">
+<link rel="stylesheet" href="/static/resume-render.css?v=20261005e">
 <style>
   body { display: flex; }
 
@@ -86,6 +87,9 @@
     width: 100%; aspect-ratio: 3 / 4; object-fit: cover; object-position: top;
     background: var(--paper-deep); display: block; border-bottom: 1px solid var(--line);
   }
+  /* v3 实时样式缩略图：用编辑器渲染器按草稿数据现场渲染 */
+  .rc-live { position: relative; width: 100%; aspect-ratio: 794 / 1123; overflow: hidden; background: #fff; display: block; }
+  .rc-live .rr-page { position: absolute; top: 0; left: 0; transform-origin: top left; pointer-events: none; }
   .rc-fallback { display: flex; align-items: center; justify-content: center; color: var(--ink-3); }
   .rc-fallback svg { width: 44px; height: 44px; }
   .rc-body { padding: 10px 13px 12px; }
@@ -250,6 +254,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="/static/resume-render.js?v=20261005e"></script>
 <script>
 /* ═══════════════════════════════════════════
    我的简历 · 简历列表页
@@ -361,6 +366,7 @@ async function loadDrafts() {
 
     draftList = await resp.json();
     renderCards();
+    renderLiveThumbs();
   } catch(e) {
     $('resumeGrid').style.display = 'none';
     $('emptyState').style.display = 'flex';
@@ -368,6 +374,48 @@ async function loadDrafts() {
     $('emptyState').querySelector('.empty-desc').textContent = e.message + '，请刷新重试';
     const emptyLink = $('emptyState').querySelector('.empty-link');
     if (emptyLink) emptyLink.style.display = 'none';
+  }
+}
+
+// ── v3 实时样式缩略图 ──
+const V3_DATA_KEY = { education: 'education_info', internship: 'internship_info', work: 'work_history',
+  project: 'projects', campus: 'campus_exp', skill: 'skill_info', honor: 'honor_cert',
+  self: 'self_evaluate', hobby: 'hobby', custom: 'custom' };
+
+function v3View(resume) {
+  const mods = {};
+  Object.keys(V3_DATA_KEY).forEach(k => { mods[V3_DATA_KEY[k]] = (resume.modules || {})[k]; });
+  const visible = {};
+  (resume.order || []).forEach(k => { visible[k] = (resume.hidden || []).indexOf(k) < 0; });
+  return { basic: resume.basic || {}, photo: (resume.basic || {}).photo || '',
+    intention: (resume.basic || {}).intention || '', modules: mods,
+    order: resume.order || [], visible: visible, showPhoto: resume.showPhoto !== false };
+}
+
+function v3Style(theme) {
+  const t = Object.assign({}, window.ResumeRender.DEFAULT_STYLE, theme || {});
+  if (t.primary) t.accent = t.primary;
+  return t;
+}
+
+async function renderLiveThumbs() {
+  for (const d of draftList) {
+    try {
+      const resp = await fetch('/api/draft/' + d.id, { headers: authHeaders(), cache: 'no-store' });
+      if (!resp.ok) continue;
+      const payload = await resp.json();
+      const data = payload.data;
+      if (!data || data.v !== 3 || !data.resume) continue; // 旧版草稿沿用模板预览图
+      const wrap = document.querySelector('[data-thumb="' + d.id + '"]');
+      if (!wrap || !window.ResumeRender) continue;
+      const style = v3Style(data.theme);
+      wrap.innerHTML = '<div class="rc-live">' + window.ResumeRender.render(v3View(data.resume), style) + '</div>';
+      const page = wrap.querySelector('.rr-page');
+      if (!page) continue;
+      window.ResumeRender.applyVars(page, style);
+      const z = wrap.clientWidth / 794;
+      page.style.transform = 'scale(' + z + ')';
+    } catch (e) { /* 单份失败不影响其余 */ }
   }
 }
 
@@ -408,7 +456,7 @@ function renderCards() {
       <label class="rc-checkbox-wrap" title="选中以批量删除">
         <input type="checkbox" class="rc-checkbox" data-cb-id="${d.id}" ${selectedIds.has(d.id) ? 'checked' : ''}>
       </label>
-      ${thumb}
+      <div class="rc-thumb-wrap" data-thumb="${d.id}">${thumb}</div>
       <div class="rc-body">
         <div class="rc-name">${escapeHtml(d.title)}</div>
         <div class="rc-meta">
