@@ -1,6 +1,6 @@
 # 智简历 · 简历优化系统
 
-基于 FastAPI + LLM 的本地部署 AI 简历生成与优化平台。核心设计是**「简历内容」与「版式模板」彻底分离**：求职者专注填写真实经历，AI 负责打磨表达，系统负责排版与导出；换模板不丢内容，一键导出 Word / PDF / 长图。全部服务可运行在一台普通 Windows 电脑上，AI 能力由本地大模型驱动，**简历数据不出本机**。
+基于 FastAPI + LLM 的本地部署 AI 简历生成与优化平台。核心设计是**「简历内容」与「版式模板」彻底分离**：求职者专注填写真实经历，AI 负责打磨表达，系统负责排版与导出；换模板不丢内容，一键导出 Word / PDF / 长图。全部服务可运行在一台普通 Windows 电脑上，AI 能力由智谱 GLM 免费模型驱动。
 
 ## 功能特性
 
@@ -20,7 +20,7 @@
 
 ### AI 能力
 
-- **JD 拆解 + 经历 STAR 量化改写 + 自我评价定制**（本地 Ollama，数据不出本机）
+- **JD 拆解 + 经历 STAR 量化改写 + 自我评价定制**（智谱 GLM-4-Flash）
 - **ATS 简历体检**、**岗位匹配度打分**（免费功能）
 
 ### 管理后台
@@ -35,7 +35,7 @@
 | --- | --- |
 | 后端 | FastAPI + Uvicorn、Pydantic |
 | 数据库 | MySQL 8（PyMySQL） |
-| LLM | OpenAI 兼容 SDK（MiMo / 智谱 GLM / 本地 Ollama） |
+| LLM | OpenAI 兼容 SDK（MiMo / 智谱 GLM） |
 | 文档处理 | python-docx（OOXML 级操作）、PyMuPDF、pdfplumber、pdf2docx、docx2pdf |
 | 图像 | Pillow、OpenCV（YuNet 人脸检测）、Tesseract OCR |
 | 前端 | 原生 HTML/CSS/JS（参数化渲染引擎 + 自研交互组件，无重型框架） |
@@ -71,7 +71,7 @@
 - Python 3.9+、MySQL 8
 - （PDF 导出）本机安装 Microsoft Word —— 依赖 Word COM 组件
 - （OCR）安装 [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) 并配置中文语言包
-- （本地模型，可选）安装 Ollama 并拉取 `deepseek-r1:1.5b`
+- （AI 能力）可访问智谱 GLM API（经历/自我评价优化用 `glm-4-flash-250414`，免费）
 
 ### 部署步骤
 
@@ -91,7 +91,7 @@ python -c "from utils import db"   # 或按 .env 配置执行建表
 python -m uvicorn main:app --host 0.0.0.0 --port 8000   # 或 Windows 下双击 启动.bat
 ```
 
-访问 <http://localhost:8000>，编辑器入口：`/static/editor.html`（需注册/登录）。
+访问 <http://localhost:8000>：首页游客可直接浏览模板中心，登录/注册为首页内置弹窗；编辑器入口 `/static/editor.html`（需登录）。
 
 ### 环境变量说明（.env）
 
@@ -99,7 +99,7 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8000   # 或 Windows 下双击 
 | --- | --- |
 | `OPENAI_API_KEY` / `OPENAI_BASE_URL` | 内容优化主模型的 Key 与接口地址（OpenAI 兼容格式） |
 | `GLM_API_KEY` | 智谱 GLM Key（编辑器 AI 生成） |
-| `OLLAMA_BASE_URL` | 本地 Ollama 地址（默认 <http://localhost:11434>） |
+| `EXP_OPT_API_KEY` / `EXP_OPT_MODEL` | 经历/自我评价优化的 Key 与模型（默认 `glm-4-flash-250414`） |
 | `DB_HOST` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` | MySQL 连接配置 |
 | `ADMIN_PASSWORD` | 管理后台管理员密码 |
 

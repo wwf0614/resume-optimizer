@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI智简历 - AI 简历优化</title>
-<link rel="stylesheet" href="/static/css/app.css?v=20261004c">
+<link rel="stylesheet" href="/static/css/app.css?v=20261005a">
 <style>
   /* 页面私有样式：颜色一律取自 app.css tokens */
   body { font-size: 14px; }
 
   /* ── 顶部导航 ── */
-  .nav-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; gap: 12px; }
+  .nav-inner { max-width: none; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 10px 32px; gap: 12px; }
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-mark { width: 38px; height: 38px; border-radius: var(--r-md); background: var(--accent-grad); color: #FAF9F6; display: flex; align-items: center; justify-content: center; }
   .logo-mark svg { width: 21px; height: 21px; }
@@ -20,22 +20,15 @@
   .nav-menu a { color: var(--ink-2); font-size: 14px; padding: 7px 13px; border-radius: var(--r-sm); transition: background-color .15s, color .15s; }
   .nav-menu a:hover { color: var(--accent); background: var(--accent-soft); }
   .nav-actions { display: flex; align-items: center; gap: 10px; }
-  .avatar { width: 36px; height: 36px; font-size: 15px; cursor: pointer; }
-  .user-chip { display: flex; align-items: center; gap: 8px; }
-  .user-name { font-size: 13.5px; font-weight: 600; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .user-logout { border: 1px solid var(--line-strong); background: #fff; color: var(--ink-2); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: var(--r-sm); cursor: pointer; font-family: inherit; transition: color .15s, border-color .15s, background-color .15s; }
-  .user-logout:hover { border-color: var(--danger-line); color: var(--danger); background: var(--danger-soft); }
+  .avatar { width: 36px; height: 36px; font-size: 15px; }
   @media (max-width: 760px) {
     .nav-menu, #deliverBtn { display: none; }
     .nav-inner { gap: 8px; padding: 10px 12px; }
     .nav-actions { gap: 6px; }
     .nav-actions .btn-primary { padding: 8px 14px; font-size: 13px; }
-    .user-name { max-width: 72px; }
   }
   @media (max-width: 560px) {
     .logo-tag { display: none; }
-    .user-name { display: none; }
-    .user-logout { padding: 5px 9px; }
   }
 
   .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px 50px; }
@@ -188,6 +181,39 @@
   .mod-empty { color: var(--ink-3); font-size: 13px; padding: 10px 0; }
 
   .footer { text-align: center; color: var(--ink-3); font-size: 12px; margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); }
+
+  /* ── 游客登录 / 注册弹窗 ── */
+  .btn-ghost { background: transparent; border: none; color: var(--ink-2); font-size: 14px; font-weight: 600; padding: 9px 12px; border-radius: var(--r-md); cursor: pointer; font-family: inherit; transition: color .15s, background-color .15s; }
+  .btn-ghost:hover { color: var(--accent); background: var(--accent-soft); }
+  .guest-actions { display: flex; align-items: center; gap: 6px; }
+  .auth-mask { position: fixed; inset: 0; z-index: 220; background: rgba(28,25,23,.5); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; padding: 20px; }
+  .auth-mask.show { display: flex; }
+  .auth-card { position: relative; width: 400px; max-width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-pop); padding: 30px 32px 26px; animation: umIn .18s ease; max-height: calc(100vh - 40px); overflow: auto; }
+  .auth-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border: 1px solid var(--line); background: #fff; color: var(--ink-3); border-radius: var(--r-sm); font-size: 13px; cursor: pointer; transition: color .15s, border-color .15s, background-color .15s; }
+  .auth-close:hover { color: var(--danger); border-color: var(--danger-line); background: var(--danger-soft); }
+  .auth-panel { display: none; }
+  .auth-panel.active { display: block; }
+  .auth-title { font-family: var(--serif); font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: .03em; }
+  .auth-sub { color: var(--ink-2); font-size: 12.5px; margin-top: 7px; line-height: 1.7; }
+  .auth-form { margin-top: 20px; }
+  .auth-form .field { margin-bottom: 14px; }
+  .auth-form .field label { display: block; font-size: 12.5px; margin-bottom: 6px; }
+  .auth-form .field-label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .auth-form .field-label-row label { margin-bottom: 0; }
+  .auth-form .input { height: 42px; }
+  .forgot { color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer; }
+  .forgot:hover { color: var(--accent-strong); text-decoration: underline; }
+  .pw-box { position: relative; }
+  .pw-box .input { padding-right: 44px; }
+  .pw-eye { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border: none; background: transparent; color: var(--ink-3); cursor: pointer; border-radius: var(--r-sm); display: flex; align-items: center; justify-content: center; transition: color .15s, background-color .15s; }
+  .pw-eye:hover { color: var(--accent); background: var(--accent-soft); }
+  .pw-eye svg { width: 17px; height: 17px; }
+  .pw-eye .i-off { display: none; }
+  .pw-eye.revealed .i-on { display: none; }
+  .pw-eye.revealed .i-off { display: block; }
+  .auth-submit { width: 100%; height: 44px; letter-spacing: 6px; text-indent: 6px; font-size: 15px; margin-top: 4px; }
+  .switch-line { text-align: center; color: var(--ink-2); font-size: 13px; margin-top: 18px; }
+  .switch-line a { font-weight: 700; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -214,10 +240,41 @@
         新建简历
       </button>
       <button class="btn-soft" id="deliverBtn">我的投递</button>
-      <div class="user-chip" id="userChip" style="display:none">
-        <div class="avatar" id="userAvatar" title="当前账号">?</div>
-        <span class="user-name" id="userName"></span>
-        <button class="user-logout" id="logoutBtn" title="退出登录">退出</button>
+      <div class="guest-actions" id="guestActions" style="display:none">
+        <button class="btn-ghost" id="navLoginBtn">登录</button>
+        <button class="btn-primary" id="navRegBtn">注册</button>
+      </div>
+      <div class="user-menu" id="userMenu" style="display:none">
+        <button class="avatar avatar-btn" id="userAvatar" title="个人中心" aria-haspopup="true" aria-expanded="false">?</button>
+        <div class="um-panel" id="umPanel" hidden>
+          <div class="um-head">
+            <div class="avatar um-avatar" id="umAvatar">?</div>
+            <div>
+              <div class="um-name" id="umName">用户</div>
+              <div class="um-account" id="umAccount"></div>
+            </div>
+          </div>
+          <div class="um-list">
+            <button class="um-item" data-um="profile">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
+              个人信息
+            </button>
+            <button class="um-item" data-um="security">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5V11c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5.5z"/><path d="M9.5 11.5l2 2 3.5-3.5"/></svg>
+              账号与安全
+            </button>
+            <button class="um-item" data-um="settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.09a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h.09a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg>
+              设置
+            </button>
+          </div>
+          <div class="um-foot">
+            <button class="um-item um-danger" id="logoutBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+              退出登录
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -225,31 +282,31 @@
 
 <div class="wrap">
   <section class="hero">
-    <span class="badge">AI 智能简历优化工具</span>
-    <h1>快速生成你的<em>专属简历</em></h1>
-    <p>粘贴招聘 JD 与简历原文，AI 深度拆解并优化经历与自我评价；再挑一套心仪模板，版式、配色与结构始终保持不变。</p>
+    <span class="badge">智能简历排版系统</span>
+    <h1>打造你的<em>专业简历</em></h1>
+    <p>三栏所见即所得编辑器 · 内容版式完全分离 · 一键导出 Word/PDF/长图</p>
     <div class="hero-tips">
-      <span class="tip-pill" id="tplCountPill">精选专业模板</span>
-      <span class="tip-pill">版式配色<b>固定不破坏</b></span>
-      <span class="tip-pill">下载后<b>自由填写</b>内容</span>
+      <span class="tip-pill" id="tplCountPill">已上架专业模板</span>
+      <span class="tip-pill">点击<b>直改</b>内容</span>
+      <span class="tip-pill">换模板<b>零丢失</b></span>
     </div>
   </section>
 
   <section class="features">
-    <div class="feature-card f-white" data-target="#optimize">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9z"/></svg></div>
-      <h3>AI经历优化</h3>
-      <p>JD 全方位拆解 + 经历 STAR 量化改写 + 定制自我评价，匹配岗位职责</p>
-    </div>
     <div class="feature-card f-white" data-target="#templates">
       <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg></div>
-      <h3>丰富性简历</h3>
-      <p>提供多种专业模板，渐变和扁平等不同风格，满足简历的美观性排版更规范。</p>
+      <h3>三栏可视化编辑</h3>
+      <p>左栏实时预览 + 右栏双面板，点击即改，换模板零丢失</p>
+    </div>
+    <div class="feature-card f-white" data-target="#optimize">
+      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9z"/></svg></div>
+      <h3>AI 智能优化</h3>
+      <p>JD 拆解 / STAR 经历量化 / 自我评价生成，一键润色提效</p>
     </div>
     <div class="feature-card f-white" data-target="#templates">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
-      <h3>一键导出</h3>
-      <p>支持导出为Word和PDF格式这两种常见的文件格式，方便投递和查阅。</p>
+      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
+      <h3>专业模板库</h3>
+      <p>多种风格模板 + 自定义主题色 / 字体 / 排版，一键导出多格式</p>
     </div>
   </section>
 
@@ -292,7 +349,7 @@
   </div>
   <div class="panel">
     <div class="opt-modes">
-      <span class="opt-mode-tip" id="optModeTip">本地 Ollama（deepseek-r1:1.5b）驱动：JD 拆解 + 经历 STAR 量化改写 + 定制自我评价，数据不出本机</span>
+      <span class="opt-mode-tip" id="optModeTip">智谱 GLM-4-Flash 驱动：JD 拆解 + 经历 STAR 量化改写 + 定制自我评价</span>
     </div>
     <div class="opt-grid">
       <div class="opt-field">
@@ -398,6 +455,75 @@
 
 <footer class="footer">AI智简历 · 简历优化系统 — 内容与版式分离，导出即所得</footer>
 
+<!-- ─── 登录 / 注册弹窗 ─── -->
+<div class="auth-mask" id="authMask">
+  <div class="auth-card">
+    <button class="auth-close" id="authClose" title="关闭" aria-label="关闭">✕</button>
+    <!-- 登录 -->
+    <div class="auth-panel active" id="authPanelLogin">
+      <div class="auth-title">账号登录</div>
+      <div class="auth-sub">登录后使用 AI 优化、在线编辑与简历导出</div>
+      <form class="auth-form" id="authLoginForm" novalidate>
+        <div class="form-error" id="authLoginError"></div>
+        <div class="field">
+          <label for="authLoginAccount">手机号/邮箱</label>
+          <input class="input" id="authLoginAccount" type="text" placeholder="手机号/邮箱" autocomplete="username">
+        </div>
+        <div class="field">
+          <div class="field-label-row"><label for="authLoginPwd">密码</label><a class="forgot" id="authForgotBtn">忘记密码？</a></div>
+          <div class="pw-box">
+            <input class="input" id="authLoginPwd" type="password" placeholder="请输入密码" autocomplete="current-password">
+            <button type="button" class="pw-eye" data-target="authLoginPwd" title="显示/隐藏密码" aria-label="显示或隐藏密码">
+              <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="btn-primary auth-submit" id="authLoginBtn" type="submit">登 录</button>
+      </form>
+      <div class="switch-line">还没有账号？<a id="authToRegister">立即注册</a></div>
+    </div>
+    <!-- 注册 -->
+    <div class="auth-panel" id="authPanelRegister">
+      <div class="auth-title">创建账号</div>
+      <div class="auth-sub">注册后可保存简历草稿，随时编辑与下载</div>
+      <form class="auth-form" id="authRegisterForm" novalidate>
+        <div class="form-error" id="authRegisterError"></div>
+        <div class="field">
+          <label for="authRegAccount">手机号/邮箱</label>
+          <input class="input" id="authRegAccount" type="text" placeholder="手机号/邮箱" autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="authRegNick">昵称（选填）</label>
+          <input class="input" id="authRegNick" type="text" placeholder="你的昵称" autocomplete="nickname">
+        </div>
+        <div class="field">
+          <label for="authRegPwd">密码</label>
+          <div class="pw-box">
+            <input class="input" id="authRegPwd" type="password" placeholder="至少 6 位" autocomplete="new-password">
+            <button type="button" class="pw-eye" data-target="authRegPwd" title="显示/隐藏密码" aria-label="显示或隐藏密码">
+              <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="authRegPwd2">确认密码</label>
+          <div class="pw-box">
+            <input class="input" id="authRegPwd2" type="password" placeholder="再次输入密码" autocomplete="new-password">
+            <button type="button" class="pw-eye" data-target="authRegPwd2" title="显示/隐藏密码" aria-label="显示或隐藏密码">
+              <svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="btn-primary auth-submit" id="authRegisterBtn" type="submit">注 册</button>
+      </form>
+      <div class="switch-line">已有账号？<a id="authToLogin">立即登录</a></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -430,17 +556,22 @@ function clearAuth() {
 function applyUser(user) {
   currentUser = user;
   const name = user.nickname || user.account || "用户";
-  $("userName").textContent = name;
-  $("userAvatar").textContent = name.trim().charAt(0).toUpperCase();
-  $("userAvatar").title = user.account || name;
-  $("userChip").style.display = "flex";
+  const initial = name.trim().charAt(0).toUpperCase();
+  $("userAvatar").textContent = initial;
+  $("umAvatar").textContent = initial;
+  $("umName").textContent = name;
+  $("umAccount").textContent = user.account || "";
+  $("userMenu").style.display = "block";
+  $("guestActions").style.display = "none";
+}
+function applyGuest() {
+  currentUser = null;
+  $("userMenu").style.display = "none";
+  $("guestActions").style.display = "flex";
 }
 async function checkAuth() {
   const t = getToken();
-  if (!t) {
-    location.href = "/login";
-    return null;
-  }
+  if (!t) { applyGuest(); return null; }
   try {
     const resp = await fetch("/api/me", { headers: authHeaders(), cache: "no-store" });
     if (resp.ok) {
@@ -450,7 +581,7 @@ async function checkAuth() {
     }
   } catch (e) {}
   clearAuth();
-  location.href = "/login";
+  applyGuest();
   return null;
 }
 $("logoutBtn").addEventListener("click", async function() {
@@ -458,8 +589,163 @@ $("logoutBtn").addEventListener("click", async function() {
     await fetch("/api/logout", { method: "POST", headers: authHeaders() });
   } catch (e) {}
   clearAuth();
-  location.href = "/login";
+  location.href = "/";
 });
+
+// ── 登录 / 注册弹窗 ──
+const AUTH = (function () {
+  const mask = $("authMask");
+  const pLogin = $("authPanelLogin"), pReg = $("authPanelRegister");
+  let pendingAction = null;   // 登录成功后要续做的动作
+  // ?next= 支持：从编辑器/我的简历被拦下的用户，登录后回到原页面（仅允许站内相对路径）
+  let authNext = new URLSearchParams(location.search).get("next");
+  if (authNext && !/^\/(?!\/)/.test(authNext)) authNext = null;
+  function setMode(mode) {
+    pLogin.classList.toggle("active", mode === "login");
+    pReg.classList.toggle("active", mode === "register");
+  }
+  function open(mode, after) {
+    setMode(mode === "register" ? "register" : "login");
+    hideErr($("authLoginError")); hideErr($("authRegisterError"));
+    pendingAction = after || null;
+    mask.classList.add("show");
+    document.body.style.overflow = "hidden";
+    setTimeout(function () {
+      const f = (mode === "register") ? $("authRegAccount") : $("authLoginAccount");
+      if (f) f.focus();
+    }, 60);
+  }
+  function close() {
+    mask.classList.remove("show");
+    document.body.style.overflow = "";
+    pendingAction = null;
+  }
+  function hideErr(box) { box.classList.remove("show"); }
+  function showErr(box, msg) { box.textContent = msg; box.classList.add("show"); }
+  function markInput(input, ok) { input.classList.toggle("error", !ok); return ok; }
+  const PHONE_RE = /^1\d{10}$/, EMAIL_RE = /^[\w.+-]+@[\w.-]+\.\w+$/;
+  function validAccount(s) { return PHONE_RE.test(s) || EMAIL_RE.test(s); }
+  async function api(path, body) {
+    const resp = await fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await resp.json().catch(function () { return {}; });
+    if (!resp.ok) throw new Error(data.detail || "请求失败，请稍后重试");
+    return data;
+  }
+  function afterAuth(user) {
+    applyUser(user);
+    loadTemplates();
+    close();
+    if (authNext) { location.href = authNext; return; }
+    if (pendingAction) { const a = pendingAction; pendingAction = null; a(); }
+  }
+
+  $("navLoginBtn").addEventListener("click", function () { open("login"); });
+  $("navRegBtn").addEventListener("click", function () { open("register"); });
+  $("authClose").addEventListener("click", close);
+  mask.addEventListener("click", function (e) { if (e.target === mask) close(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && mask.classList.contains("show")) close(); });
+  $("authToRegister").addEventListener("click", function () { hideErr($("authLoginError")); setMode("register"); });
+  $("authToLogin").addEventListener("click", function () { hideErr($("authRegisterError")); setMode("login"); });
+  $("authForgotBtn").addEventListener("click", function () { showToast("请联系管理员协助重置密码"); });
+
+  $("authLoginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    hideErr($("authLoginError"));
+    const account = $("authLoginAccount").value.trim().toLowerCase();
+    const pwd = $("authLoginPwd").value;
+    let ok = true;
+    ok = markInput($("authLoginAccount"), account.length > 0) && ok;
+    ok = markInput($("authLoginPwd"), pwd.length > 0) && ok;
+    if (!ok) { showErr($("authLoginError"), "请填写账号和密码"); return; }
+    const btn = $("authLoginBtn"); btn.disabled = true; btn.textContent = "登录中…";
+    try {
+      const data = await api("/api/login", { account: account, password: pwd });
+      localStorage.setItem(TOKEN_KEY, data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      showToast("欢迎回来，" + (data.user.nickname || account));
+      afterAuth(data.user);
+    } catch (err) {
+      showErr($("authLoginError"), err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "登 录";
+    }
+  });
+
+  $("authRegisterForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    hideErr($("authRegisterError"));
+    const account = $("authRegAccount").value.trim().toLowerCase();
+    const nick = $("authRegNick").value.trim();
+    const pwd = $("authRegPwd").value;
+    const pwd2 = $("authRegPwd2").value;
+    let ok = true;
+    ok = markInput($("authRegAccount"), account.length > 0) && ok;
+    ok = markInput($("authRegPwd"), pwd.length > 0) && ok;
+    ok = markInput($("authRegPwd2"), pwd2.length > 0) && ok;
+    if (!ok) { showErr($("authRegisterError"), "请完整填写注册信息"); return; }
+    if (!validAccount(account)) { showErr($("authRegisterError"), "请输入正确的手机号或邮箱"); markInput($("authRegAccount"), false); return; }
+    if (pwd.length < 6) { showErr($("authRegisterError"), "密码至少 6 位"); markInput($("authRegPwd"), false); return; }
+    if (pwd !== pwd2) { showErr($("authRegisterError"), "两次输入的密码不一致"); markInput($("authRegPwd2"), false); return; }
+    const btn = $("authRegisterBtn"); btn.disabled = true; btn.textContent = "注册中…";
+    try {
+      const data = await api("/api/register", { account: account, nickname: nick, password: pwd });
+      localStorage.setItem(TOKEN_KEY, data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      showToast("注册成功，已为你登录");
+      afterAuth(data.user);
+    } catch (err) {
+      showErr($("authRegisterError"), err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = "注 册";
+    }
+  });
+
+  // 密码可见性
+  mask.querySelectorAll(".pw-eye").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const input = $(btn.dataset.target); if (!input) return;
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.classList.toggle("revealed", show);
+    });
+  });
+
+  return { open: open, isOpen: function () { return mask.classList.contains("show"); } };
+})();
+
+// 游客守卫：需要登录才能做的事，未登录则弹登录框，登录后续做
+function requireLogin(action) {
+  if (currentUser) { action && action(); return true; }
+  AUTH.open("login", action || null);
+  return false;
+}
+
+
+// ── 头像个人菜单 ──
+(function () {
+  const menu = $("userMenu"), btn = $("userAvatar"), panel = $("umPanel");
+  function setOpen(open) {
+    panel.hidden = !open;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  btn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    setOpen(panel.hidden);
+  });
+  document.addEventListener("click", function (e) {
+    if (!panel.hidden && !menu.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") setOpen(false);
+  });
+  panel.querySelectorAll(".um-item[data-um]").forEach(function (item) {
+    item.addEventListener("click", function () {
+      setOpen(false);
+      const label = { profile: "个人信息", security: "账号与安全", settings: "设置" }[item.dataset.um] || "该";
+      showToast(label + "功能即将上线，敬请期待");
+    });
+  });
+})();
 
 // ── 模板列表 ──
 const MODULE_LABELS = {
@@ -510,14 +796,9 @@ async function loadTemplates() {
       }
     } catch (e) {}
   }
-  // 3) 后台静默刷新（失败不影响已显示的模板，不再报错）
+  // 3) 后台静默刷新（公开接口；失败不影响已显示的模板，不再报错）
   try {
     const resp = await fetch("/templates", { headers: authHeaders(), cache: "no-store" });
-    if (resp.status === 401) {
-      clearAuth();
-      location.href = "/login";
-      return;
-    }
     if (resp.ok) {
       const list = await resp.json();
       if (Array.isArray(list)) {
@@ -605,12 +886,26 @@ function renderTemplates() {
         $("tplModalImg").src = tpl.preview_url;
         $("tplModalImg").alt = tpl.name;
         $("tplModalImg").dataset.tplId = tpl.id;
-    $("tplModalDl").href = authUrl("/templates/" + tpl.id + "/download");
+    $("tplModalDl").dataset.base = "/templates/" + tpl.id + "/download";
+        $("tplModalDl").href = authUrl($("tplModalDl").dataset.base);
         $("tplModal").classList.add("show");
         document.body.style.overflow = "hidden";
       }
     });
   });
+  // 游客点下载 → 先弹登录，登录后自动续下载（只绑定一次）
+  const dl = $("tplModalDl");
+  if (!dl._guestBound) {
+    dl._guestBound = true;
+    dl.addEventListener("click", function (e) {
+      if (currentUser || !dl.dataset.base) return;
+      e.preventDefault();
+      requireLogin(function () {
+        dl.href = authUrl(dl.dataset.base);
+        setTimeout(function () { dl.click(); }, 120);
+      });
+    });
+  }
   renderPagination(totalPages);
 }
 
@@ -722,8 +1017,11 @@ function openResumeEditor() {
   window.open('/static/editor.html', '_blank');
 }
 
-$("newBtn").addEventListener("click", () => openResumeEditor());
+$("newBtn").addEventListener("click", function () { requireLogin(openResumeEditor); });
 $("deliverBtn").addEventListener("click", () => showToast("投递管理功能即将上线，敬请期待"));
+$("myResumesNavLink").addEventListener("click", function (e) {
+  if (!currentUser) { e.preventDefault(); requireLogin(function () { location.href = "/my-resumes"; }); }
+});
 document.querySelectorAll(".feature-card").forEach(function(card) {
   card.addEventListener("click", function() {
     scrollToId(card.dataset.target.slice(1));
@@ -771,7 +1069,7 @@ $("blankApply").addEventListener("click", async function() {
   fd.append("merge_mode", "merge");
   try {
     const resp = await fetch("/optimize/mapped-fill", { method: "POST", headers: authHeaders(), body: fd });
-    if (resp.status === 401) { clearAuth(); location.href = "/login"; return; }
+    if (resp.status === 401) { clearAuth(); applyGuest(); AUTH.open("login"); return; }
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.detail || "重新生成失败");
     currentSession = data.session_id;
@@ -788,7 +1086,7 @@ $("blankApply").addEventListener("click", async function() {
   }
 });
 
-// ── AI 优化（简历经历 + 自我评价，本地 Ollama 单版本） ──
+// ── AI 优化（简历经历 + 自我评价，智谱 GLM-4-Flash） ──
 
 function copyText(text) {
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -813,6 +1111,7 @@ $("optCopyBtn").addEventListener("click", function() {
 
 $("optBtn").addEventListener("click", async function() {
   hideAlert();
+  if (!currentUser) { requireLogin(function () { $("optBtn").click(); }); return; }
   const jd = $("jdInput").value.trim();
   const exp = $("expInput").value.trim();
   if (!jd) { showAlert("请先粘贴完整招聘 JD（岗位职责 + 任职要求）"); return; }
@@ -820,7 +1119,7 @@ $("optBtn").addEventListener("click", async function() {
   const btn = $("optBtn");
   btn.disabled = true;
   $("optProgress").classList.add("show");
-  $("optProgressText").textContent = "本地 AI 正在拆解 JD 并优化…";
+  $("optProgressText").textContent = "AI 正在拆解 JD 并优化…";
   const fd = new FormData();
   fd.append("jd", jd);
   fd.append("experience", exp);
@@ -828,7 +1127,7 @@ $("optBtn").addEventListener("click", async function() {
   fd.append("extra", $("extraInput").value.trim());
   try {
     const resp = await fetch("/api/optimize-experience-self", { method: "POST", headers: authHeaders(), body: fd });
-    if (resp.status === 401) { clearAuth(); location.href = "/login"; return; }
+    if (resp.status === 401) { clearAuth(); applyGuest(); AUTH.open("login"); return; }
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.detail || "优化失败");
     $("optResultTitle").textContent = "优化结果";
@@ -844,13 +1143,24 @@ $("optBtn").addEventListener("click", async function() {
   }
 });
 
-// ── 启动：校验登录态后渲染页面 ──
+// ── 启动：识别登录态渲染页面（游客同样可浏览模板中心） ──
 checkAuth().then(function(user) {
-  if (!user) return;
-  applyUser(user);
+  if (user) applyUser(user);
   loadTemplates();
+  const params = new URLSearchParams(location.search);
+  // 旧登录地址 /login 重定向而来：自动打开对应弹窗，并清掉地址栏参数
+  const authParam = params.get("auth");
+  const nextParam = params.get("next");
+  const safeNext = (nextParam && /^\/(?!\/)/.test(nextParam)) ? nextParam : null;
+  if (authParam === "login" || authParam === "register") {
+    params.delete("auth"); params.delete("next");
+    const qs = params.toString();
+    history.replaceState(null, "", location.pathname + (qs ? "?" + qs : ""));
+    if (user) { if (safeNext) location.replace(safeNext); }
+    else AUTH.open(authParam);
+  }
   // 支持 ?modal=模板ID 直接打开模板预览弹窗（测试/分享用）
-  const modalParam = new URLSearchParams(location.search).get("modal");
+  const modalParam = params.get("modal");
   if (modalParam) {
     const id = parseInt(modalParam, 10);
     if (id && templateList.length) {
@@ -860,7 +1170,8 @@ checkAuth().then(function(user) {
         $("tplModalImg").src = tpl.preview_url;
         $("tplModalImg").alt = tpl.name;
         $("tplModalImg").dataset.tplId = tpl.id;
-        $("tplModalDl").href = authUrl("/templates/" + tpl.id + "/download");
+        $("tplModalDl").dataset.base = "/templates/" + tpl.id + "/download";
+        $("tplModalDl").href = authUrl($("tplModalDl").dataset.base);
         $("tplModal").classList.add("show");
         document.body.style.overflow = "hidden";
       }

@@ -30,6 +30,9 @@ _deleted_backup_20260924/
 .DS_Store
 Thumbs.db
 
+# 本地工具数据（不入库）
+.workbuddy/
+
 # 验收测试截图（本地留存）
 gui-test-screenshots/
 

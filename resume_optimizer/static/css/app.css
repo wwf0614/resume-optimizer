@@ -61,6 +61,17 @@ body {
 }
 ::selection { background: #DFE7F5; color: var(--accent-strong); }
 
+/* ── 页面主滚动条：隐藏轨道、保留滚动功能；悬停/拖动时才浮现细条（仅作用于视口，内滚容器不受影响） ── */
+html { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+html:hover { scrollbar-color: rgba(31,38,48,.22) transparent; }
+html::-webkit-scrollbar { width: 10px; height: 10px; }
+html::-webkit-scrollbar-track { background: transparent; }
+html::-webkit-scrollbar-thumb { background: transparent; border-radius: 6px; border: 3px solid transparent; background-clip: content-box; }
+html:hover::-webkit-scrollbar-thumb { background: rgba(31,38,48,.22); background-clip: content-box; }
+html::-webkit-scrollbar-thumb:hover { background: rgba(31,38,48,.38); background-clip: content-box; }
+html::-webkit-scrollbar-thumb:active { background: rgba(31,38,48,.48); background-clip: content-box; }
+html::-webkit-scrollbar-corner { background: transparent; }
+
 /* 标题一律宋体：文档气质 */
 h1, h2, h3, h4, .font-serif { font-family: var(--serif); font-weight: 700; letter-spacing: .02em; }
 
@@ -158,6 +169,36 @@ label { font-size: 13px; color: var(--ink-2); font-weight: 600; }
   border-radius: 50%; background: var(--accent-soft); color: var(--accent);
   font-weight: 700; overflow: hidden; flex: none;
 }
+
+/* ── 头像个人菜单（全站共享：顶栏 / 侧边栏） ── */
+.user-menu { position: relative; }
+.avatar-btn { border: none; background: none; padding: 0; cursor: pointer; font-family: inherit; transition: box-shadow .15s; }
+.avatar-btn:hover { box-shadow: var(--ring); }
+.um-panel {
+  position: absolute; right: 0; top: calc(100% + 10px); width: 268px;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-pop); z-index: 120; overflow: hidden;
+  transform-origin: top right; animation: umIn .16s ease;
+}
+.um-panel[hidden] { display: none; }
+@keyframes umIn { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+.um-head { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--paper-deep); border-bottom: 1px solid var(--line); }
+.um-avatar { width: 46px; height: 46px; font-size: 19px; }
+.um-name { font-size: 14.5px; font-weight: 700; color: var(--ink); max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.um-account { font-size: 12px; color: var(--ink-3); margin-top: 2px; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.um-list { padding: 6px; }
+.um-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  border: none; background: none; padding: 9px 12px; border-radius: var(--r-sm);
+  font-size: 13px; color: var(--ink-2); cursor: pointer; font-family: inherit;
+  transition: background-color .15s, color .15s;
+}
+.um-item:hover { background: var(--accent-soft); color: var(--accent); }
+.um-item svg { width: 15px; height: 15px; flex: none; }
+.um-foot { border-top: 1px solid var(--line); padding: 6px; }
+.um-item.um-danger:hover { background: var(--danger-soft); color: var(--danger); }
+/* 侧边栏变体：面板向右展开 */
+.um-panel.um-side { right: auto; left: calc(100% + 12px); top: 0; transform-origin: top left; }
 
 /* ── 顶栏 ── */
 .topbar, .navbar {

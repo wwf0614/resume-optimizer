@@ -1493,7 +1493,7 @@
 
   function boot() {
     apiGet('/api/me').then(function (me) {
-      if (!me) { location.href = '/login'; return null; }
+      if (!me) { location.href = '/?auth=login&next=' + encodeURIComponent('/static/editor.html' + location.search); return null; }
       S.user = me;
       return loadInitial().then(function () {
         bindInline($('paper'));

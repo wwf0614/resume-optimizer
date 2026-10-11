@@ -21,7 +21,7 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -417,12 +417,13 @@ def _public_user(user: dict) -> dict:
 
 
 @app.get("/login")
-def login_page():
-    """用户登录/注册页。"""
-    html_path = BASE_DIR / "static" / "login.html"
-    return Response(html_path.read_text(encoding="utf-8"),
-                    media_type="text/html; charset=utf-8",
-                    headers={"Cache-Control": "no-store"})
+def login_page(mode: str = "", next: str = ""):
+    """登录/注册已并入首页弹窗：旧地址重定向到首页并自动打开对应面板。"""
+    from urllib.parse import urlencode
+    params = {"auth": "register" if mode == "register" else "login"}
+    if next and next.startswith("/") and not next.startswith("//"):
+        params["next"] = next
+    return RedirectResponse("/?" + urlencode(params), status_code=302)
 
 
 @app.post("/api/register")
@@ -2288,7 +2289,7 @@ def optimize_experience_self_api(jd: str = Form(""),
                                  extra: str = Form(""),
                                  mode: str = Form("full"),
                                  _: dict = Depends(_require_user)):
-    """「简历经历 + 自我评价」优化（本地 Ollama 单版本，mode 仅兼容旧前端、忽略）。
+    """「简历经历 + 自我评价」优化（智谱 GLM-4-Flash 驱动，mode 仅兼容旧前端、忽略）。
     仅优化经历与自我评价，其余内容分毫不动。"""
     if not (jd or "").strip():
         raise HTTPException(status_code=400, detail="请粘贴完整招聘 JD（岗位职责 + 任职要求）")

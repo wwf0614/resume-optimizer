@@ -34,12 +34,13 @@ glm_client = OpenAI(
     base_url=GLM_BASE_URL,
 )
 
-# 本地 Ollama（OpenAI 兼容端点，api_key 任意非空即可）
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "deepseek-r1:1.5b")
-ollama_client = OpenAI(
-    api_key="ollama",
-    base_url=OLLAMA_BASE_URL,
+# 经历/自我评价优化专用：智谱 GLM-4-Flash（独立 Key，未配置时回落到 GLM_API_KEY）
+EXP_OPT_API_KEY = os.getenv("EXP_OPT_API_KEY", GLM_API_KEY)
+EXP_OPT_BASE_URL = os.getenv("EXP_OPT_BASE_URL", GLM_BASE_URL)
+EXP_OPT_MODEL = os.getenv("EXP_OPT_MODEL", "glm-4-flash-250414")
+exp_opt_client = OpenAI(
+    api_key=EXP_OPT_API_KEY,
+    base_url=EXP_OPT_BASE_URL,
 )
 
 
@@ -722,32 +723,40 @@ EXPERIENCE_SELF_FULL_PROMPT = """角色定位：拥有8年企业招聘HR经验+�
 本次输入已直接给出，请按上述格式直接输出结果，不要提问、不要要求补充材料、不要输出任何开场白或结束语。"""
 
 
-def _call_ollama_long_text(prompt: str) -> str:
-    """调用本地 Ollama 模型并返回完整长文本。
+def _call_exp_opt_long_text(prompt: str) -> str:
+    """调用智谱 GLM-4-Flash 并返回完整长文本（经历 + 自我评价优化专用）。
 
-    - Ollama 走标准 OpenAI 兼容协议，输出长度参数为 max_tokens；
-    - deepseek-r1 系列会把思考过程以 <think>...</think> 混在正文里，需剥离；
+    - 走标准 OpenAI 兼容协议，输出长度参数为 max_tokens；
+    - 遇限流（429）做指数退避重试（2s、4s）；
     - 只去除思考标签与代码块围栏，不截断内容。
     """
     kwargs = {
-        "model": OLLAMA_MODEL,
+        "model": EXP_OPT_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
         "max_tokens": 4096,
     }
-    t0 = _time.monotonic()
-    try:
-        resp = ollama_client.chat.completions.create(timeout=300, **kwargs)
-        content = resp.choices[0].message.content or ""
-        applog.log("llm_call", model=OLLAMA_MODEL, json_mode=False,
-                   duration_ms=round((_time.monotonic() - t0) * 1000),
-                   chars=len(content))
-    except Exception as exc:  # noqa: BLE001
-        applog.log("llm_error", model=OLLAMA_MODEL, json_mode=False,
-                   duration_ms=round((_time.monotonic() - t0) * 1000),
-                   error=str(exc)[:200])
-        raise
-    content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
+    attempts = 3
+    content = ""
+    for i in range(attempts):
+        t0 = _time.monotonic()
+        try:
+            resp = exp_opt_client.chat.completions.create(timeout=300, **kwargs)
+            content = resp.choices[0].message.content or ""
+            applog.log("llm_call", model=EXP_OPT_MODEL, json_mode=False,
+                       duration_ms=round((_time.monotonic() - t0) * 1000),
+                       chars=len(content))
+            break
+        except Exception as exc:  # noqa: BLE001
+            err = str(exc)
+            applog.log("llm_error", model=EXP_OPT_MODEL, json_mode=False,
+                       duration_ms=round((_time.monotonic() - t0) * 1000),
+                       error=err[:200])
+            if ("rate" in err.lower() or "429" in err) and i < attempts - 1:
+                _time.sleep(2 * (i + 1))
+                continue
+            raise
+    content = re.sub(r"<\|?think\|?>.*?<\|?/\s*think\|?>", "", content, flags=re.DOTALL)
     if "```" in content:
         parts = content.split("```")
         content = " ".join(p for p in parts if not p.strip().lower().startswith(("response", "json")))
@@ -757,7 +766,7 @@ def _call_ollama_long_text(prompt: str) -> str:
 def optimize_experience_self(jd: str, experience: str, self_evaluate: str = "",
                              mode: str = "full", extra: str = "") -> str:
     """「简历经历 + 自我评价」优化：仅优化经历与自我评价，其余内容分毫不动。
-    统一由本地 Ollama 模型驱动；mode 参数仅为兼容旧调用保留、不再区分版本。
+    统一由智谱 GLM-4-Flash 驱动；mode 参数仅为兼容旧调用保留、不再区分版本。
     返回：JD拆解 + 优化后经历 + 定制自我评价 三部分文本。"""
     jd = (jd or "").strip()
     experience = (experience or "").strip()
@@ -773,7 +782,7 @@ def optimize_experience_self(jd: str, experience: str, self_evaluate: str = "",
         "3. 原本的自我评价内容：\n" + self_evaluate
     if extra:
         prompt += "\n\n4. 补充信息（求职行业/应届或社招/是否转行等）：\n" + extra
-    return _call_ollama_long_text(prompt)
+    return _call_exp_opt_long_text(prompt)
 
 
 # ── 整份简历 AI 生成（用户原始目标：一句话 / JD → 完整简历） ──
