@@ -3,16 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>模板管理 - 简历优化系统</title>
+<title>管理后台 - AI智简历</title>
 <link rel="stylesheet" href="/static/css/app.css?v=20261005a">
 <style>
   /* 管理后台 · 与前台同一设计语言 */
-  body { padding: 32px 16px; }
-  .container { width: 100%; max-width: 880px; margin: 0 auto; }
+  body { padding: 0; display: flex; min-height: 100vh; }
+  .container { display: none; }
+  /* ── 侧边工具栏 ── */
+  .adm-side {
+    width: 208px; min-width: 208px; background: var(--card);
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
+    padding: 22px 14px 16px;
+  }
+  .adm-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 18px; border-bottom: 1px solid var(--line); margin-bottom: 14px; }
+  .adm-brand-mark { width: 34px; height: 34px; border-radius: var(--r-md); background: var(--accent-grad); color: #FAF9F6; display: flex; align-items: center; justify-content: center; flex: none; }
+  .adm-brand-mark svg { width: 18px; height: 18px; }
+  .adm-brand-name { font-family: var(--serif); font-size: 16px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+  .adm-brand-name small { display: block; font-family: var(--sans); font-size: 10.5px; font-weight: 400; color: var(--ink-3); letter-spacing: .04em; }
+  .adm-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .adm-nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 13px;
+    border-radius: var(--r-md); font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background-color .15s, color .15s; text-decoration: none; color: var(--ink-2);
+    border: none; background: none; width: 100%; font-family: inherit; text-align: left;
+  }
+  .adm-nav-item:hover { background: var(--accent-soft); color: var(--accent); }
+  .adm-nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; box-shadow: inset 2px 0 0 var(--accent); }
+  .adm-nav-ico { width: 18px; height: 18px; flex-shrink: 0; }
+  .adm-nav-ico svg { width: 18px; height: 18px; display: block; }
+  .adm-side-foot { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .adm-foot-link { font-size: 13px; color: var(--ink-2); text-decoration: none; padding: 6px 13px; border-radius: var(--r-sm); transition: background-color .15s, color .15s; }
+  .adm-foot-link:hover { background: var(--accent-soft); color: var(--accent); }
+  /* ── 主内容区 ── */
+  .adm-main { flex: 1; margin-left: 208px; padding: 26px 30px 40px; min-width: 0; }
+  .adm-wrap { width: 100%; max-width: 1000px; margin: 0 auto; }
   h1 { font-size: 22px; }
   .subtitle { color: var(--ink-3); font-size: 13px; margin-bottom: 20px; }
-  .back-link { font-size: 13px; color: var(--ink-3); text-decoration: none; }
-  .back-link:hover { color: var(--accent); }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-paper); padding: 24px; margin-bottom: 20px; }
   .card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: var(--ink); }
   .alert { border-radius: var(--r-md); }
@@ -34,54 +62,206 @@
   .ev { font-weight: 600; color: var(--accent); white-space: nowrap; }
   .err { color: var(--danger); font-weight: 600; }
   .detail { color: var(--ink-2); word-break: break-all; font-size: 12px; }
-  .login-box { max-width: 360px; margin: 0 auto; padding: 12px 0; }
-  .pwd-row { display: flex; gap: 10px; align-items: center; }
-  .pwd-row input { flex: 1; }
   .lock-note { font-size: 12px; color: var(--ink-3); margin-top: 8px; }
+  /* 运行日志 */
+  .log-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .log-controls input, .log-controls select { width: auto; padding: 8px 12px; font-size: 13px; }
+  .log-controls .log-search { flex: 1; min-width: 160px; }
+  .log-status { font-size: 12px; color: var(--ink-3); }
+  .log-auto { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; user-select: none; }
+  .log-wrap { overflow: auto; max-height: calc(100vh - 250px); min-height: 200px; }
+  .log-wrap table { font-size: 12.5px; width: 100%; }
+  .log-wrap th { position: sticky; top: 0; z-index: 1; background: var(--paper-deep); }
+  .log-wrap td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  /* 统计卡片（用户 / 下载量） */
+  .stat-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .stat-chip { flex: 1; min-width: 150px; background: var(--paper-deep); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 18px; }
+  .stat-chip b { display: block; font-size: 26px; font-family: var(--serif); color: var(--ink); line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .stat-chip span { font-size: 12px; color: var(--ink-3); }
+  .stat-chip.gold { background: var(--vip-soft); border-color: var(--vip-line); }
+  .stat-chip.gold b { color: var(--vip); }
+  /* 下载 TOP 榜 */
+  .rank-list { display: flex; flex-direction: column; gap: 10px; }
+  .rank-item { display: flex; align-items: center; gap: 12px; }
+  .rank-no { width: 26px; height: 26px; border-radius: 50%; background: var(--paper-deep); color: var(--ink-2); font-size: 12.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; font-variant-numeric: tabular-nums; }
+  .rank-item:nth-child(1) .rank-no { background: var(--gold); color: #fff; }
+  .rank-item:nth-child(2) .rank-no { background: #B8B2A6; color: #fff; }
+  .rank-item:nth-child(3) .rank-no { background: #C9A183; color: #fff; }
+  .rank-name { width: 200px; flex: none; font-size: 13px; color: var(--ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-bar { flex: 1; height: 10px; background: var(--paper-deep); border-radius: 5px; overflow: hidden; min-width: 60px; }
+  .rank-bar i { display: block; height: 100%; background: var(--accent-grad); border-radius: 5px; }
+  .rank-cnt { width: 64px; flex: none; text-align: right; font-size: 13px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .rank-last { width: 132px; flex: none; font-size: 11.5px; color: var(--ink-3); text-align: right; }
+  /* 用户表 */
+  .users-wrap { overflow: auto; }
+  .vip-badge { font-size: 11px; padding: 2px 9px; border-radius: 999px; background: var(--vip-soft); color: var(--vip); border: 1px solid var(--vip-line); font-weight: 600; }
+  .free-badge { font-size: 11px; padding: 2px 9px; border-radius: 999px; background: var(--paper-deep); color: var(--ink-3); }
+  .pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; font-size: 12.5px; color: var(--ink-2); }
+  @media (max-width: 860px) {
+    .adm-side { width: 64px; min-width: 64px; padding: 18px 8px 12px; }
+    .adm-brand-name, .adm-nav-item span:not(.adm-nav-ico), .adm-foot-link { display: none; }
+    .adm-nav-item { justify-content: center; padding: 12px 0; }
+    .adm-main { margin-left: 64px; padding: 20px 14px 32px; }
+  }
 </style>
 </head>
 <body>
-<div class="container">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-    <div>
-      <h1>管理后台</h1>
-      <p class="subtitle">上传简历模板（.docx），可视化编辑模板布局，管理模板库</p>
+
+<!-- ── 侧边工具栏 ── -->
+<aside class="adm-side">
+  <div class="adm-brand">
+    <div class="adm-brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 6.1L21 8.5l-4.9 4.3 1.4 6.4L12 15.9l-5.5 3.3 1.4-6.4L3 8.5l6.6-.4z"/></svg>
     </div>
-    <div style="display:flex;gap:8px;flex:none;align-items:center">
-      <a class="back-link" href="/" style="float:none">← 返回首页</a>
-      <button class="btn btn-mini" id="logoutBtn" style="display:none">退出登录</button>
-    </div>
+    <div class="adm-brand-name">AI智简历<small>管理后台</small></div>
   </div>
+  <nav class="adm-nav">
+    <button class="adm-nav-item active" data-page="tpl">
+      <span class="adm-nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M9 13h6M9 17h4"/></svg></span>
+      <span>模板库</span>
+    </button>
+    <button class="adm-nav-item" data-page="logs">
+      <span class="adm-nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span>
+      <span>日志管理</span>
+    </button>
+    <button class="adm-nav-item" data-page="users">
+      <span class="adm-nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M17.5 14.7c2.3.6 4 2.4 4 5.3"/></svg></span>
+      <span>用户管理</span>
+    </button>
+    <button class="adm-nav-item" data-page="dl">
+      <span class="adm-nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M6 16v-5M11 16V6M16 16v-8M21 16V4"/></svg></span>
+      <span>模板下载量</span>
+    </button>
+  </nav>
+  <div class="adm-side-foot">
+    <button class="adm-foot-link" id="logoutBtn" style="display:none;border:none;background:none;cursor:pointer;font-family:inherit;text-align:left">退出登录</button>
+  </div>
+</aside>
+
+<!-- ── 主内容区 ── -->
+<main class="adm-main">
+<div class="adm-wrap">
 
   <div class="alert" id="alert"></div>
   <div class="alert ok" id="okAlert"></div>
 
-  <!-- 上传模板 -->
-  <div class="card" id="uploadCard" style="display:none">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <div style="width:38px;height:38px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 20h16"/></svg></div>
-      <span style="font-size:17px;font-weight:700;color:var(--ink)">上传新模板</span>
+  <!-- 模板库 -->
+  <section id="pageTpl">
+    <h1>模板库</h1>
+    <p class="subtitle">上传简历模板（.docx），审核上架、可视化编辑布局、管理模板增删</p>
+    <!-- 上传模板 -->
+    <div class="card" id="uploadCard" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div style="width:38px;height:38px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 20h16"/></svg></div>
+        <span style="font-size:17px;font-weight:700;color:var(--ink)">上传新模板</span>
+      </div>
+      <div style="font-size:12.5px;color:var(--ink-3);margin-bottom:14px">支持 .docx，可多选批量导入</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
+        <div style="flex:1;border:1px solid var(--line-strong);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink-2);background:var(--paper-deep);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="filePathBox">未选择文件</div>
+        <button class="btn" id="pickFileBtn" style="padding:9px 18px;border-radius:8px">选择文件</button>
+        <input type="file" id="tplFile" accept=".docx" multiple hidden>
+        <div id="fileCount" style="font-size:12px;color:var(--ink-3)"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn" id="uploadBtn" style="background:var(--accent);border-radius:8px;padding:11px 26px">上传所选模板</button>
+        <button class="btn" id="batchUploadBtn" style="background:var(--success);border-radius:8px;padding:11px 26px">批量导入全部所选</button>
+      </div>
     </div>
-    <div style="font-size:12.5px;color:var(--ink-3);margin-bottom:14px">支持 .docx，可多选批量导入</div>
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">
-      <div style="flex:1;border:1px solid var(--line-strong);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink-2);background:var(--paper-deep);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="filePathBox">未选择文件</div>
-      <button class="btn" id="pickFileBtn" style="padding:9px 18px;border-radius:8px">选择文件</button>
-      <input type="file" id="tplFile" accept=".docx" multiple hidden>
-      <div id="fileCount" style="font-size:12px;color:var(--ink-3)"></div>
+    <!-- 模板列表 -->
+    <div class="card" id="listCard" style="display:none">
+      <div class="card-title">免费模板</div>
+      <div id="tplList"></div>
     </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn" id="uploadBtn" style="background:var(--accent);border-radius:8px;padding:11px 26px">上传所选模板</button>
-      <button class="btn" id="batchUploadBtn" style="background:var(--success);border-radius:8px;padding:11px 26px">批量导入全部所选</button>
-    </div>
-  </div>
+  </section>
 
-  <!-- 模板列表 -->
-  <div class="card" id="listCard" style="display:none">
-    <div class="card-title">免费模板</div>
-    <div id="tplList"></div>
-  </div>
+  <!-- 日志管理 -->
+  <section id="pageLogs" hidden>
+    <h1>日志管理</h1>
+    <p class="subtitle">结构化运行日志（内存环形缓冲 500 条），支持关键字与事件类型筛选</p>
+    <div class="card">
+      <div class="log-controls">
+        <input type="text" id="logFilter" class="log-search" placeholder="筛选关键字（事件 / 详情全文匹配）…">
+        <select id="logEvFilter">
+          <option value="">全部事件</option>
+          <option value="optimize_start">优化开始</option>
+          <option value="optimize_done">优化完成</option>
+          <option value="llm_start">AI 开始</option>
+          <option value="llm_call">AI 调用</option>
+          <option value="llm_error">AI 错误</option>
+          <option value="ai_optimize_section">条目 AI 优化</option>
+          <option value="fill_done">模板填充</option>
+          <option value="draft_save">草稿保存</option>
+          <option value="download">下载</option>
+          <option value="template_download">模板下载</option>
+          <option value="template_upload">模板上传</option>
+          <option value="template_review">模板审核</option>
+          <option value="template_delete">模板删除</option>
+          <option value="user_login">用户登录</option>
+          <option value="user_register">用户注册</option>
+          <option value="admin_login">管理员登录</option>
+          <option value="request_error">请求错误</option>
+          <option value="server_start">服务启动</option>
+        </select>
+        <button class="btn btn-mini" id="logReloadBtn">刷新</button>
+        <label class="log-auto"><input type="checkbox" id="logAuto" checked>每 5 秒自动刷新</label>
+        <span class="log-status" id="logStatus">进入本页自动加载</span>
+      </div>
+      <div class="log-wrap">
+        <table>
+          <thead><tr><th style="width:150px">时间</th><th style="width:170px">事件</th><th>详情</th></tr></thead>
+          <tbody id="logBody"><tr><td colspan="3" class="empty">加载中…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 用户管理 -->
+  <section id="pageUsers" hidden>
+    <h1>用户管理</h1>
+    <p class="subtitle">注册用户总览：普通用户与 VIP 用户数量、注册时间与最近登录</p>
+    <div class="stat-row">
+      <div class="stat-chip"><b id="usTotal">-</b><span>注册用户总数</span></div>
+      <div class="stat-chip gold"><b id="usVip">-</b><span>VIP 用户</span></div>
+      <div class="stat-chip"><b id="usFree">-</b><span>普通用户</span></div>
+    </div>
+    <div class="card">
+      <div class="log-controls">
+        <input type="text" id="usFilter" class="log-search" placeholder="搜索账号 / 昵称…">
+        <label class="log-auto"><input type="checkbox" id="usVipOnly">只看 VIP</label>
+        <button class="btn btn-mini" id="usReloadBtn">刷新</button>
+      </div>
+      <div class="users-wrap">
+        <table>
+          <thead><tr><th style="width:56px">序号</th><th>账号</th><th>昵称</th><th style="width:76px">身份</th><th style="width:72px">草稿数</th><th style="width:150px">注册时间</th><th style="width:150px">最近登录</th><th style="width:72px">操作</th></tr></thead>
+          <tbody id="usBody"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pager" id="usPager" hidden>
+        <button class="btn btn-mini" id="usPrev">‹ 上一页</button>
+        <span id="usPageInfo"></span>
+        <button class="btn btn-mini" id="usNext">下一页 ›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 模板下载量 -->
+  <section id="pageDl" hidden>
+    <h1>模板下载量</h1>
+    <p class="subtitle">首页模板中心「下载模板（Word 原件）」的累计统计（自本次上线起记录）</p>
+    <div class="stat-row">
+      <div class="stat-chip"><b id="dlTotal">-</b><span>累计下载</span></div>
+      <div class="stat-chip"><b id="dlToday">-</b><span>今日新增</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">下载量 TOP 5
+        <button class="btn btn-mini" id="dlReloadBtn">刷新</button>
+      </div>
+      <div class="rank-list" id="dlRank"><div class="empty">加载中…</div></div>
+    </div>
+  </section>
 
 </div>
+</main>
 
 <script>
 const $ = (id) => document.getElementById(id);
@@ -120,11 +300,191 @@ function hideAlert() { $("alert").classList.remove("show"); }
 function showOk(msg) { const a = $("okAlert"); a.textContent = msg; a.classList.add("show"); setTimeout(() => a.classList.remove("show"), 3000); }
 
 function enterAdmin() {
-  $("logoutBtn").style.display = "inline-block";
+  $("logoutBtn").style.display = "block";
   $("uploadCard").style.display = "block";
   $("listCard").style.display = "block";
-  loadTemplates();
+  applyRoute();
 }
+
+// ── 侧栏页面路由（hash 驱动：/admin#logs 等；刷新保留当前页，支持前进/后退） ──
+const ADM_PAGES = { tpl: "pageTpl", logs: "pageLogs", users: "pageUsers", dl: "pageDl" };
+let admCurPage = "tpl";
+function pageFromHash() {
+  const h = (location.hash || "").replace(/^#/, "");
+  return ADM_PAGES[h] ? h : "tpl";
+}
+function applyRoute() {
+  const name = pageFromHash();
+  if (!ADM_PAGES[name]) return;
+  admCurPage = name;
+  document.querySelectorAll(".adm-nav-item").forEach(function (it) {
+    it.classList.toggle("active", it.dataset.page === name);
+  });
+  Object.keys(ADM_PAGES).forEach(function (k) {
+    const sec = $(ADM_PAGES[k]);
+    if (sec) sec.hidden = (k !== name);
+  });
+  // 离开日志页停轮询；进入各页拉数据（刷新 = 重新拉当前页内容）
+  if (name === "logs") { startLogs(); } else { stopLogs(); }
+  if (name === "tpl") loadTemplates();
+  if (name === "users") loadUsers();
+  if (name === "dl") loadDownloads();
+}
+document.querySelectorAll(".adm-nav-item").forEach(function (it) {
+  it.addEventListener("click", function () {
+    const want = "#" + it.dataset.page;
+    if (location.hash === want) { applyRoute(); }        // 同页再点：仅刷新内容
+    else { location.hash = want; }                        // 经 hashchange 统一切换
+  });
+});
+window.addEventListener("hashchange", applyRoute);
+
+// ── 运行日志（仅管理后台可见，走管理员令牌） ──
+let logTimer = null;
+async function loadLogs() {
+  const body = $("logBody"), status = $("logStatus");
+  try {
+    const resp = await adminFetch("/admin/logs?limit=300");
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || ("HTTP " + resp.status));
+    renderLogs(data.logs || []);
+    status.textContent = (data.logs || []).length + " 条 · " + new Date().toLocaleTimeString();
+  } catch (e) {
+    status.textContent = "加载失败：" + e.message;
+    body.innerHTML = '<tr><td colspan="3" class="empty">加载失败：' + e.message + '</td></tr>';
+  }
+}
+function renderLogs(logs) {
+  const kw = $("logFilter").value.trim().toLowerCase();
+  const ev = $("logEvFilter").value;
+  const rows = logs.filter(function (l) {
+    if (ev && l.event !== ev) return false;
+    if (!kw) return true;
+    return JSON.stringify(l).toLowerCase().indexOf(kw) >= 0;
+  });
+  const body = $("logBody");
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="3" class="empty">暂无匹配日志</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(function (l) {
+    const keys = Object.keys(l).filter(function (k) { return !["event", "ts", "level"].includes(k); });
+    const detail = keys.map(function (k) { return "<b>" + escAdm(k) + ":</b> " + escAdm(l[k]); }).join(" · ");
+    const cls = (l.event === "request_error" || String(l.event).indexOf("error") >= 0) ? "err" : "ev";
+    return "<tr><td>" + escAdm(l.ts) + '</td><td class="' + cls + '">' + escAdm(l.event) + "</td>"
+      + '<td class="detail">' + detail + "</td></tr>";
+  }).join("");
+}
+function escAdm(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+function startLogs() {
+  loadLogs();
+  stopLogs();
+  if ($("logAuto").checked) logTimer = setInterval(loadLogs, 5000);
+}
+function stopLogs() { clearInterval(logTimer); logTimer = null; }
+$("logReloadBtn").addEventListener("click", loadLogs);
+$("logFilter").addEventListener("input", function () { if (admCurPage === "logs") loadLogs(); });
+$("logEvFilter").addEventListener("change", function () { if (admCurPage === "logs") loadLogs(); });
+$("logAuto").addEventListener("change", function () {
+  if (this.checked) { logTimer = setInterval(loadLogs, 5000); } else { stopLogs(); }
+});
+
+// ── 用户管理（普通用户 / VIP 统计） ──
+const US_PAGE_SIZE = 20;
+let usPage = 1, usTotal = 0;
+async function loadUsers() {
+  const body = $("usBody");
+  try {
+    const kw = $("usFilter").value.trim();
+    const vip = $("usVipOnly").checked ? 1 : 0;
+    const resp = await adminFetch("/admin/users?keyword=" + encodeURIComponent(kw) + "&vip=" + vip + "&page=" + usPage + "&size=" + US_PAGE_SIZE);
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || ("HTTP " + resp.status));
+    usTotal = data.total || 0;
+    $("usTotal").textContent = data.total;
+    $("usVip").textContent = data.vip;
+    $("usFree").textContent = (data.total || 0) - (data.vip || 0);
+    const items = data.items || [];
+    if (!items.length) {
+      body.innerHTML = '<tr><td colspan="8" class="empty">暂无匹配用户</td></tr>';
+    } else {
+      body.innerHTML = items.map(function (u, i) {
+        return "<tr><td title=\"库内 ID " + u.id + "\">" + ((usPage - 1) * US_PAGE_SIZE + i + 1) + "</td><td>" + escAdm(u.account) + "</td><td>" + escAdm(u.nickname || "") + "</td>"
+          + '<td>' + (u.is_vip ? '<span class="vip-badge">VIP</span>' : '<span class="free-badge">普通</span>') + "</td>"
+          + "<td>" + (u.draft_count || 0) + "</td><td>" + escAdm(u.created_at) + "</td><td>" + escAdm(u.last_login_at || "—") + "</td>"
+          + '<td><button class="btn btn-danger btn-mini us-del" data-uid="' + u.id + '"'
+          + ' data-name="' + escAdm(u.nickname || u.account) + '" data-drafts="' + (u.draft_count || 0) + '">移除</button></td></tr>';
+      }).join("");
+    }
+    const pages = Math.max(1, Math.ceil(usTotal / US_PAGE_SIZE));
+    const pager = $("usPager");
+    pager.hidden = pages <= 1;
+    $("usPageInfo").textContent = "第 " + usPage + " / " + pages + " 页 · 共 " + usTotal + " 人";
+    $("usPrev").disabled = usPage <= 1;
+    $("usNext").disabled = usPage >= pages;
+  } catch (e) {
+    body.innerHTML = '<tr><td colspan="8" class="empty">加载失败：' + escAdm(e.message) + "</td></tr>";
+  }
+}
+$("usReloadBtn").addEventListener("click", function () { usPage = 1; loadUsers(); });
+$("usFilter").addEventListener("input", function () { usPage = 1; if (admCurPage === "users") loadUsers(); });
+$("usVipOnly").addEventListener("change", function () { usPage = 1; loadUsers(); });
+$("usPrev").addEventListener("click", function () { if (usPage > 1) { usPage--; loadUsers(); } });
+$("usNext").addEventListener("click", function () { usPage++; loadUsers(); });
+
+// 移除用户（事件委托；二次确认，草稿一并删除）
+$("usBody").addEventListener("click", async function (e) {
+  const btn = e.target.closest(".us-del");
+  if (!btn || btn.disabled) return;
+  const uid = btn.dataset.uid, name = btn.dataset.name, drafts = parseInt(btn.dataset.drafts || "0", 10);
+  const warn = drafts > 0
+    ? "确认移除用户「" + name + "」（ID " + uid + "）？其 " + drafts + " 份简历草稿将一并删除，且该用户会被强制退出登录。此操作不可恢复。"
+    : "确认移除用户「" + name + "」（ID " + uid + "）？该用户会被强制退出登录。此操作不可恢复。";
+  if (!confirm(warn)) return;
+  btn.disabled = true;
+  try {
+    const resp = await adminFetch("/admin/users/" + uid, { method: "DELETE" });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || ("HTTP " + resp.status));
+    showOk(data.message || "用户已移除");
+    // 当前页删空则回退一页
+    if (($("usBody").querySelectorAll("tr").length <= 1) && usPage > 1) usPage--;
+    loadUsers();
+  } catch (err) {
+    showAlert("移除失败：" + err.message);
+    btn.disabled = false;
+  }
+});
+
+// ── 模板下载量统计 ──
+async function loadDownloads() {
+  const rank = $("dlRank");
+  try {
+    const resp = await adminFetch("/admin/downloads/stats?top=5");
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || ("HTTP " + resp.status));
+    $("dlTotal").textContent = data.total;
+    $("dlToday").textContent = data.today;
+    const top = data.top || [];
+    if (!top.length) {
+      rank.innerHTML = '<div class="empty">暂无下载记录（上线后用户从首页模板中心下载即会累计）</div>';
+      return;
+    }
+    const max = top[0].count || 1;
+    rank.innerHTML = top.map(function (t, i) {
+      return '<div class="rank-item"><span class="rank-no">' + (i + 1) + "</span>"
+        + '<span class="rank-name" title="模板 ID ' + t.template_id + '">' + escAdm(t.name) + "</span>"
+        + '<span class="rank-bar"><i style="width:' + Math.max(4, Math.round(t.count / max * 100)) + '%"></i></span>'
+        + '<span class="rank-cnt">' + t.count + " 次</span>"
+        + '<span class="rank-last">最近 ' + escAdm((t.last_at || "").slice(0, 10) || "—") + "</span></div>";
+    }).join("");
+  } catch (e) {
+    rank.innerHTML = '<div class="empty">加载失败：' + escAdm(e.message) + "</div>";
+  }
+}
+$("dlReloadBtn").addEventListener("click", loadDownloads);
 
 $("logoutBtn").addEventListener("click", async () => {
   try {

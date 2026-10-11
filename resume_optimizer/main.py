@@ -1005,7 +1005,7 @@ def richtext_warm(_: dict = Depends(_require_user)):
 
 
 @app.get("/templates/{template_id}/download")
-def download_template_file(template_id: int, _: dict = Depends(_require_user)):
+def download_template_file(template_id: int, user: dict = Depends(_require_user)):
     """用户端下载模板原始文件（仅免费模板；VIP 模板需开通会员后下载）。"""
     tpl = db.get_template(template_id)
     if tpl is None:
@@ -1015,6 +1015,11 @@ def download_template_file(template_id: int, _: dict = Depends(_require_user)):
     tpl_file = BASE_DIR / tpl["file_path"]
     if not tpl_file.exists():
         raise HTTPException(status_code=404, detail="模板文件缺失")
+    try:
+        db.record_template_download(template_id, tpl.get("name") or "", user.get("id"))
+        applog.log("template_download", template_id=template_id, user_id=user.get("id"))
+    except Exception as exc:  # noqa: BLE001 统计失败不阻塞下载
+        applog.log("download_record_error", template_id=template_id, error=str(exc)[:200])
     safe_name = re.sub(r'[\\/:*?"<>|]', "_", tpl.get("name") or "template") + ".docx"
     return FileResponse(
         str(tpl_file),
@@ -1146,6 +1151,51 @@ def admin_logs(
 ):
     """返回最近系统日志（需管理员密码）。"""
     return {"logs": applog.recent(min(max(limit, 1), 500))}
+
+
+@app.get("/admin/users")
+def admin_users(
+    keyword: str = "",
+    vip: int = 0,
+    page: int = 1,
+    size: int = 20,
+    _: None = Depends(_require_admin_header),
+):
+    """普通用户列表（排除管理员）：总数 / VIP 数 / 分页明细。"""
+    size = min(max(size, 5), 100)
+    page = max(page, 1)
+    return db.list_normal_users(keyword=keyword.strip(), vip_only=bool(vip),
+                                offset=(page - 1) * size, limit=size)
+
+
+@app.delete("/admin/users/{user_id}")
+def admin_delete_user(user_id: int, _: None = Depends(_require_admin_header)):
+    """移除普通用户：连带删除其全部草稿，并即时吊销该用户的登录令牌。
+
+    管理员账号不可经此接口删除（SQL 层已排除 is_admin=1）。
+    """
+    result = db.delete_normal_user(user_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="用户不存在（管理员账号请在数据库直接管理）")
+    # 吊销内存中该用户的全部登录令牌：被移除用户立即掉线
+    revoked = 0
+    for t in [k for k, v in user_tokens.items() if v.get("user_id") == user_id]:
+        user_tokens.pop(t, None)
+        revoked += 1
+    applog.log("admin_user_delete", user_id=user_id, account=result["account"],
+               drafts=result["drafts"], tokens_revoked=revoked)
+    return {"message": f"已移除用户「{result['nickname'] or result['account']}」"
+                       + (f"（连带删除 {result['drafts']} 份草稿）" if result["drafts"] else ""),
+            "drafts_deleted": result["drafts"], "tokens_revoked": revoked}
+
+
+@app.get("/admin/downloads/stats")
+def admin_download_stats(
+    top: int = 5,
+    _: None = Depends(_require_admin_header),
+):
+    """模板下载量统计：总量 / 今日 / TOP N 排行。"""
+    return db.download_stats(top_n=min(max(top, 1), 20))
 
 
 # ══════════════════ 模板库（管理员）══════════════════

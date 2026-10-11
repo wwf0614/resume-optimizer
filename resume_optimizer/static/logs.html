@@ -2,126 +2,13 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>运行日志 - AI智简历</title>
-<link rel="stylesheet" href="/static/css/app.css?v=20261005a">
-<style>
-  body { padding: 24px; }
-  .head { max-width: 1100px; margin: 0 auto 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-  .head h1 { font-size: 20px; }
-  .head h1 span { color: var(--ink); }
-  .head h1 small { font-family: var(--sans); font-size: 13px; font-weight: 400; color: var(--ink-3); margin-left: 8px; letter-spacing: 0; }
-  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .controls input, .controls select { width: auto; padding: 8px 12px; }
-  .controls button { padding: 8px 18px; }
-  .status { font-size: 12px; color: var(--ink-3); }
-  .card { max-width: 1100px; margin: 0 auto; overflow: hidden; }
-  .tbl-wrap { overflow: auto; max-height: calc(100vh - 170px); }
-  table { font-size: 12.5px; }
-  th { position: sticky; top: 0; z-index: 1; }
-  td { padding: 8px 12px; }
-  .ev { font-weight: 600; color: var(--accent); white-space: nowrap; }
-  .err { color: var(--danger); font-weight: 600; }
-  .detail { color: var(--ink-2); word-break: break-all; }
-  .detail b { color: var(--ink); font-weight: 600; }
-  .empty { text-align: center; color: var(--ink-3); padding: 40px; }
-</style>
+<script>
+  // 运行日志已并入管理后台「运行日志」标签页，仅管理员可查看。
+  location.replace("/admin");
+</script>
 </head>
 <body>
-<div class="head">
-  <h1><span>AI智简历</span><small>运行日志</small></h1>
-  <div class="controls">
-    <input type="password" id="pwd" placeholder="管理员密码">
-    <input type="text" id="filter" placeholder="筛选关键字…">
-    <select id="evFilter">
-      <option value="">全部事件</option>
-      <option value="optimize_start">优化开始</option>
-      <option value="optimize_done">优化完成</option>
-      <option value="llm_call">AI 调用</option>
-      <option value="fill_done">模板填充</option>
-      <option value="download">下载</option>
-      <option value="template_upload">模板上传</option>
-      <option value="template_delete">模板删除</option>
-      <option value="request_error">错误</option>
-    </select>
-    <button id="loadBtn" class="btn-primary">加载日志</button>
-    <span class="status" id="status">未连接</span>
-  </div>
-</div>
-<div class="card">
-  <div class="tbl-wrap">
-    <table>
-      <thead><tr><th>时间</th><th>事件</th><th>详情</th></tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
-</div>
-
-<script>
-const $ = (id) => document.getElementById(id);
-let timer = null;
-let pwd = "";
-
-function esc(s) {
-  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-async function loadLogs() {
-  pwd = $("pwd").value || pwd;
-  if (!pwd) { $("status").textContent = "请输入管理员密码"; return; }
-  try {
-    const resp = await fetch("/admin/logs?limit=300", { headers: { "X-Admin-Password": pwd } });
-    if (!resp.ok) {
-      const d = await resp.json().catch(() => ({}));
-      $("status").textContent = "加载失败：" + (d.detail || resp.status);
-      return;
-    }
-    const data = await resp.json();
-    render(data.logs || []);
-    $("status").textContent = "已连接 · " + (data.logs || []).length + " 条 · 每 5 秒自动刷新";
-  } catch (e) {
-    $("status").textContent = "网络错误：" + e.message;
-  }
-}
-
-function render(logs) {
-  const kw = $("filter").value.trim().toLowerCase();
-  const ev = $("evFilter").value;
-  const rows = logs.filter(function(l) {
-    if (ev && l.event !== ev) return false;
-    if (!kw) return true;
-    return JSON.stringify(l).toLowerCase().indexOf(kw) >= 0;
-  });
-  const tbody = $("tbody");
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="3" class="empty">暂无匹配日志</td></tr>';
-    return;
-  }
-  tbody.innerHTML = rows.map(function(l) {
-    const keys = Object.keys(l).filter(function(k) { return !["event", "ts", "level"].includes(k); });
-    const detail = keys.map(function(k) { return "<b>" + esc(k) + ":</b> " + esc(l[k]); }).join(" · ");
-    const cls = l.event === "request_error" || l.event === "llm_error" ? "err" : "ev";
-    return "<tr><td>" + esc(l.ts) + "</td><td class=\"" + cls + "\">" + esc(l.event) + "</td>"
-      + "<td class=\"detail\">" + detail + "</td></tr>";
-  }).join("");
-}
-
-$("loadBtn").addEventListener("click", loadLogs);
-$("filter").addEventListener("input", function() {
-  if (pwd) loadLogs();
-});
-$("evFilter").addEventListener("change", function() {
-  if (pwd) loadLogs();
-});
-$("pwd").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") { loadLogs(); startAuto(); }
-});
-
-function startAuto() {
-  clearInterval(timer);
-  timer = setInterval(loadLogs, 5000);
-}
-loadLogs();
-</script>
+<p style="font-family:sans-serif;text-align:center;padding:40px">运行日志已迁移至管理后台 — <a href="/admin">前往查看</a></p>
 </body>
 </html>

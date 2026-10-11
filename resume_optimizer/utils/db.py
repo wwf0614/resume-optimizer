@@ -97,6 +97,18 @@ CREATE TABLE IF NOT EXISTS resume_drafts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 """
 
+# 模板下载流水：名称快照 + 无外键，模板删除后统计仍可追溯
+_CREATE_DOWNLOADS_SQL = """
+CREATE TABLE IF NOT EXISTS template_downloads (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    template_id INT NOT NULL,
+    template_name VARCHAR(100) DEFAULT '',
+    user_id INT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_dl_tpl (template_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+"""
+
 
 @contextmanager
 def get_conn():
@@ -149,6 +161,7 @@ def init_db() -> None:
             cur.execute(_CREATE_USERS_SQL)
             cur.execute(_CREATE_ALIASES_SQL)
             cur.execute(_CREATE_DRAFTS_SQL)
+            cur.execute(_CREATE_DOWNLOADS_SQL)
             # 兼容旧库：补充用户管理员标记列
             cur.execute(
                 "SELECT COUNT(*) AS c FROM information_schema.COLUMNS "
@@ -299,6 +312,106 @@ def set_user_vip(user_id: int, is_vip: int) -> bool:
                 (1 if is_vip else 0, user_id),
             )
             return cur.rowcount > 0
+
+
+def delete_normal_user(user_id: int) -> Optional[dict]:
+    """移除普通用户（连带删除其草稿）。管理员账号受保护、不可经此删除。
+
+    成功返回 {account, nickname, drafts}，用户不存在或为管理员时返回 None。
+    下载流水 template_downloads 保留（无外键、含名称快照），删除后统计仍可追溯。
+    """
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, account, nickname FROM users WHERE id = %s AND is_admin = 0",
+                (user_id,),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            cur.execute("DELETE FROM resume_drafts WHERE user_id = %s", (user_id,))
+            drafts = int(cur.rowcount)
+            cur.execute("DELETE FROM users WHERE id = %s", (user_id,))
+    return {"account": row["account"], "nickname": row.get("nickname") or "", "drafts": drafts}
+
+
+# ── 用户管理（管理后台）──
+
+
+def list_normal_users(keyword: str = "", vip_only: bool = False,
+                      offset: int = 0, limit: int = 20) -> dict:
+    """普通用户列表（排除管理员），附草稿数。返回 {total, vip, items}。
+
+    排序：注册时间最久在前（同刻按 id），管理端展示为连续序号，增删自动重排。
+    """
+    where = ["u.is_admin = 0"]
+    args = []
+    if keyword:
+        where.append("(u.account LIKE %s OR u.nickname LIKE %s)")
+        args += ["%" + keyword + "%", "%" + keyword + "%"]
+    if vip_only:
+        where.append("u.is_vip = 1")
+    cond = "WHERE " + " AND ".join(where)
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT COUNT(*) AS total, SUM(u.is_vip = 1) AS vip FROM users u " + cond,
+                args,
+            )
+            agg = cur.fetchone() or {}
+            cur.execute(
+                "SELECT u.id, u.account, u.nickname, u.is_vip, u.created_at, u.last_login_at, "
+                "       (SELECT COUNT(*) FROM resume_drafts d WHERE d.user_id = u.id) AS draft_count "
+                "FROM users u " + cond + " ORDER BY u.created_at ASC, u.id ASC LIMIT %s OFFSET %s",
+                args + [limit, offset],
+            )
+            items = cur.fetchall()
+    return {
+        "total": int(agg.get("total") or 0),
+        "vip": int(agg.get("vip") or 0),
+        "items": [dict(it, created_at=str(it.get("created_at") or ""),
+                       last_login_at=str(it.get("last_login_at") or "")) for it in items],
+    }
+
+
+# ── 模板下载统计 ──
+
+
+def record_template_download(template_id: int, template_name: str, user_id) -> None:
+    """记录一次模板文件下载（名称快照，模板删除后仍可追溯）。"""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO template_downloads (template_id, template_name, user_id) VALUES (%s, %s, %s)",
+                (template_id, template_name or "", user_id),
+            )
+
+
+def download_stats(top_n: int = 5) -> dict:
+    """下载总量 + 今日新增 + 按模板聚合 TOP 排行（当前名优先，已删除模板回退快照名）。"""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT COUNT(*) AS total, SUM(created_at >= CURDATE()) AS today FROM template_downloads"
+            )
+            agg = cur.fetchone() or {}
+            cur.execute(
+                "SELECT d.template_id, "
+                "       COALESCE(NULLIF(MAX(t.name), ''), MAX(d.template_name)) AS name, "
+                "       COUNT(*) AS cnt, "
+                "       MAX(d.created_at) AS last_at "
+                "FROM template_downloads d LEFT JOIN templates t ON t.id = d.template_id "
+                "GROUP BY d.template_id "
+                "ORDER BY cnt DESC LIMIT %s",
+                (top_n,),
+            )
+            rows = cur.fetchall()
+    top = [
+        {"template_id": r["template_id"], "name": r["name"] or ("模板 #" + str(r["template_id"])),
+         "count": int(r["cnt"]), "last_at": str(r.get("last_at") or "")}
+        for r in rows
+    ]
+    return {"total": int(agg.get("total") or 0), "today": int(agg.get("today") or 0), "top": top}
 
 
 def touch_login(user_id: int) -> None:
