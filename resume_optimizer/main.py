@@ -2305,6 +2305,30 @@ def optimize_experience_self_api(jd: str = Form(""),
     return {"text": result}
 
 
+@app.post("/api/ai/optimize-section")
+def ai_optimize_section_api(data: dict = None, _: dict = Depends(_require_user)):
+    """编辑器内单模块 AI 优化（智谱 GLM-4-Flash）：
+    section ∈ internship/work/project/campus/self，返回与输入行结构一致的优化文本。"""
+    data = data or {}
+    section = str(data.get("section") or "")
+    content = str(data.get("content") or "")
+    jd = str(data.get("jd") or "")
+    extra = str(data.get("extra") or "")
+    if section not in llm.SECTION_KINDS:
+        raise HTTPException(status_code=400, detail="不支持优化的模块")
+    if not content.strip():
+        raise HTTPException(status_code=400, detail="请先填写该模块的原始内容")
+    try:
+        result = llm.optimize_section(section, content, jd, extra)
+    except Exception as exc:  # noqa: BLE001
+        applog.log("ai_optimize_section_error", section=section, error=str(exc)[:200])
+        raise HTTPException(status_code=502, detail="AI 优化服务暂时不可用，请稍后重试")
+    if not result:
+        raise HTTPException(status_code=502, detail="AI 未返回内容，请稍后重试")
+    applog.log("ai_optimize_section", section=section, chars=len(result))
+    return {"text": result}
+
+
 @app.post("/api/ai-generate-resume")
 def ai_generate_resume(data: dict = None, _: dict = Depends(_require_user)):
     """AI 从零生成整份简历：输入一句话描述 / JD / 目标岗位，返回 basic + modules 结构化内容。"""

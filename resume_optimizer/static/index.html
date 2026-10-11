@@ -58,24 +58,8 @@
   .sec-desc { font-size: 13px; color: var(--ink-3); }
   .sec-more { margin-left: auto; font-size: 12.5px; font-weight: 600; }
 
-  /* ── AI 优化（经历 + 自我评价） ── */
+  /* ── 通用面板 ── */
   .panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-paper); padding: 22px; }
-  .opt-modes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-  .opt-mode-tip { font-size: 12px; color: var(--ink-3); line-height: 1.6; }
-  .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 720px) { .opt-grid { grid-template-columns: 1fr; } }
-  .opt-field { display: flex; flex-direction: column; gap: 7px; }
-  .opt-field label { font-size: 13px; font-weight: 600; color: var(--ink); }
-  .opt-field .opt-sub { font-size: 12px; color: var(--ink-3); font-weight: 400; }
-  .opt-field textarea { min-height: 150px; }
-  .opt-field.small textarea { min-height: 96px; }
-  .opt-result { display: none; margin-top: 22px; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; background: #fff; }
-  .opt-result.show { display: block; }
-  .opt-result-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 16px; background: var(--paper-deep); border-bottom: 1px solid var(--line); font-size: 14px; font-weight: 600; }
-  .opt-result-body { padding: 18px; font-size: 13.5px; line-height: 1.85; white-space: pre-wrap; word-break: break-word; color: var(--ink-2); max-height: 560px; overflow: auto; }
-  .opt-copy { border: 1px solid var(--line-strong); background: #fff; color: var(--ink-2); border-radius: var(--r-sm); padding: 5px 13px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 5px; transition: color .15s, border-color .15s; }
-  .opt-copy:hover { color: var(--accent); border-color: var(--accent); }
-  .opt-copy svg { width: 13px; height: 13px; }
 
   /* ── 模板：纸张卡片 ── */
   .tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px, 1fr)); gap: 16px; }
@@ -115,70 +99,6 @@
   .tpl-modal-tip { user-select: none; }
   .tpl-modal-dl { display: inline-flex; align-items: center; gap: 7px; border-radius: var(--r-md); padding: 9px 22px; font-size: 13.5px; font-weight: 600; }
   .tpl-modal-dl svg { width: 15px; height: 15px; }
-
-  /* ── AI 优化按钮与进度 ── */
-  .btn-row { margin-top: 24px; text-align: center; }
-  .btn-optimize { display: inline-flex; align-items: center; gap: 9px; background: linear-gradient(180deg, #3D5CA6, #2F4B7C); color: #FAF9F6; border: none; border-radius: var(--r-md); padding: 13px 46px; font-size: 15px; font-weight: 600; letter-spacing: 3px; cursor: pointer; font-family: inherit; transition: background-color .15s; }
-  .btn-optimize:hover { background: linear-gradient(180deg, #34549B, #27406F); }
-  .btn-optimize:disabled { background: #A9B4C4; cursor: not-allowed; }
-  .btn-optimize svg { width: 17px; height: 17px; }
-
-  .progress { display: none; margin-top: 18px; text-align: center; font-size: 13.5px; color: var(--ink-2); }
-  .progress.show { display: block; }
-  .progress-dots::after { content: ""; animation: dots 1.4s steps(4, end) infinite; }
-  @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
-
-  /* ── 空白字段补充 / 内容修剪 ── */
-  .trim-panel { display: none; margin-top: 16px; background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-paper); padding: 18px 20px; }
-  .trim-panel.show { display: block; }
-  .trim-head { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-  .trim-sub { font-size: 12px; color: var(--ink-2); margin: 6px 0 12px; line-height: 1.6; }
-  .trim-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
-  .trim-status { font-size: 12px; color: var(--ink-3); }
-  .blank-panel { margin-top: 16px; border: 1px dashed var(--line-strong); background: #FDFCFA; border-radius: var(--r-lg); padding: 18px; }
-  .blank-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-  @media (max-width: 640px) { .blank-fields { grid-template-columns: 1fr; } }
-  .blank-field { display: flex; flex-direction: column; gap: 5px; }
-  .blank-field label { font-size: 12px; color: var(--ink-2); font-weight: 600; }
-
-  /* ── 岗位匹配度 ── */
-  .match-card { display: none; margin-top: 16px; background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-paper); padding: 18px 20px; }
-  .match-card.show { display: block; }
-  .match-top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .match-ring { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; color: #fff; flex: none; font-variant-numeric: tabular-nums; }
-  .match-kw { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
-  .match-kw span { font-size: 12px; padding: 3px 9px; border-radius: var(--r-sm); }
-  .match-kw .hit { background: var(--success-soft); color: var(--success); }
-  .match-kw .miss { background: var(--danger-soft); color: var(--danger); }
-  .match-sug { margin-top: 10px; font-size: 12.5px; color: var(--ink-2); line-height: 1.7; }
-
-  /* ── 优化结果 ── */
-  .result { display: none; }
-  .result.show { display: block; }
-  .result-card { background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-paper); }
-  .result-head { background: var(--paper-deep); border-bottom: 1px solid var(--line); padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-  .result-head h3 { font-size: 16px; display: flex; align-items: center; gap: 8px; }
-  .dl-group { display: flex; gap: 10px; flex-wrap: wrap; }
-  .dl-btn { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 1px solid var(--line-strong); color: var(--ink); padding: 8px 16px; border-radius: var(--r-md); font-size: 13px; font-weight: 600; transition: border-color .15s, background-color .15s; }
-  .dl-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .dl-btn svg { width: 15px; height: 15px; }
-  .dl-btn.word svg { color: var(--success); }
-  .dl-btn.pdf svg { color: var(--danger); }
-  .dl-hint { font-size: 12px; color: var(--ink-3); padding: 12px 24px 4px; }
-  .tabs { display: flex; gap: 2px; margin: 10px 24px 0; border-bottom: 1px solid var(--line); }
-  .tab { padding: 10px 18px; cursor: pointer; font-size: 14px; color: var(--ink-2); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s, border-color .15s; }
-  .tab:hover { color: var(--accent); }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-  .tab-panel { display: none; padding: 18px 24px 24px; }
-  .tab-panel.show { display: block; }
-  .preview { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r-md); padding: 16px; max-height: 400px; overflow: auto; white-space: pre-wrap; word-break: break-word; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
-  .struct-head { display: flex; flex-wrap: wrap; gap: 14px; background: var(--paper-deep); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 16px; margin-bottom: 14px; font-size: 14px; color: var(--ink-2); align-items: center; }
-  .struct-head .avatar { width: 36px; height: 36px; font-size: 16px; }
-  .struct-head b { color: var(--ink); font-size: 16px; }
-  .mod-block { border: 1px solid var(--line); border-radius: var(--r-md); margin-bottom: 11px; overflow: hidden; }
-  .mod-head { background: var(--paper-deep); padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--ink); border-left: 3px solid var(--accent); }
-  .mod-body { padding: 11px 14px; font-size: 13px; line-height: 1.8; white-space: pre-wrap; word-break: break-word; color: var(--ink-2); }
-  .mod-empty { color: var(--ink-3); font-size: 13px; padding: 10px 0; }
 
   .footer { text-align: center; color: var(--ink-3); font-size: 12px; margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); }
 
@@ -231,7 +151,7 @@
     </a>
 <nav class="nav-menu">
   <a href="#templates">模板中心</a>
-  <a href="#optimize">AI 优化</a>
+  <a href="javascript:void(0)" id="navAiOptimize">AI 优化</a>
   <a href="/my-resumes" id="myResumesNavLink">我的简历</a>
 </nav>
     <div class="nav-actions">
@@ -298,10 +218,10 @@
       <h3>三栏可视化编辑</h3>
       <p>左栏实时预览 + 右栏双面板，点击即改，换模板零丢失</p>
     </div>
-    <div class="feature-card f-white" data-target="#optimize">
+    <div class="feature-card f-white" data-editor="1">
       <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9z"/></svg></div>
       <h3>AI 智能优化</h3>
-      <p>JD 拆解 / STAR 经历量化 / 自我评价生成，一键润色提效</p>
+      <p>编辑器内一键优化：JD 拆解 / STAR 经历量化 / 自我评价定制</p>
     </div>
     <div class="feature-card f-white" data-target="#templates">
       <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
@@ -340,113 +260,6 @@
           免费模板仅供下载，不提供在线编辑。<br>
           需要边改边导出，请点右上角「＋ 新建简历」进入在线编辑器。
         </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="sec-head" id="optimize">
-    <span class="sec-title">简历经历 · 自我评价优化</span>
-  </div>
-  <div class="panel">
-    <div class="opt-modes">
-      <span class="opt-mode-tip" id="optModeTip">智谱 GLM-4-Flash 驱动：JD 拆解 + 经历 STAR 量化改写 + 定制自我评价</span>
-    </div>
-    <div class="opt-grid">
-      <div class="opt-field">
-        <label>① 完整招聘 JD</label>
-        <span class="opt-sub">岗位职责 + 任职要求全部粘贴，缺一段匹配度会大幅下降</span>
-        <textarea id="jdInput" placeholder="粘贴岗位职责与任职要求全文…"></textarea>
-      </div>
-      <div class="opt-field">
-        <label>② 原始工作 / 实习 / 项目经历</label>
-        <span class="opt-sub">尽量写详细，细碎小事也写上，方便提炼数据与工作价值</span>
-        <textarea id="expInput" placeholder="按时间顺序粘贴工作/实习/项目经历原文…"></textarea>
-      </div>
-      <div class="opt-field small">
-        <label>③ 原来的自我评价</label>
-        <span class="opt-sub">没有可留空，AI 会跳过该部分</span>
-        <textarea id="selfInput" placeholder="粘贴原有自我评价（选填）…"></textarea>
-      </div>
-      <div class="opt-field small">
-        <label>④ 补充信息（选填）</label>
-        <span class="opt-sub">求职行业（国企/私企/互联网）、应届生/社招、是否转行，文风更贴合</span>
-        <textarea id="extraInput" placeholder="例如：私企 · 互联网行业 · 社招…"></textarea>
-      </div>
-    </div>
-    <div class="btn-row">
-      <button class="btn-optimize" id="optBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9z"/></svg>
-        AI 优化经历与自我评价
-      </button>
-    </div>
-    <div class="progress" id="optProgress">
-      <span class="spinner"></span><span id="optProgressText">AI 正在深度拆解 JD 并优化…</span><span class="progress-dots"></span>
-    </div>
-    <div class="opt-result" id="optResult">
-      <div class="opt-result-head">
-        <span id="optResultTitle">优化结果</span>
-        <button class="opt-copy" id="optCopyBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          一键复制
-        </button>
-      </div>
-      <div class="opt-result-body" id="optResultBody"></div>
-    </div>
-  </div>
-
-  <div class="alert" id="alert"><span aria-hidden="true">!</span><span id="alertMsg"></span></div>
-  <div class="warn-banner" id="warnBanner"><span aria-hidden="true">※</span><ul id="warnList"></ul></div>
-
-
-  <div class="result" id="result">
-    <div class="sec-head">
-      <span class="sec-title">优化结果</span>
-      <span class="sec-desc">预览确认后即可下载</span>
-    </div>
-    <div class="result-card">
-      <div class="result-head">
-        <h3>优化完成</h3>
-        <div class="dl-group">
-          <a class="dl-btn word" id="dlDocx" href="#" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 12v6m0 0l-2.5-2.5M12 18l2.5-2.5"/></svg>
-            下载 Word
-          </a>
-          <a class="dl-btn pdf" id="dlPdf" href="#" download>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 12v6m0 0l-2.5-2.5M12 18l2.5-2.5"/></svg>
-            下载 PDF
-          </a>
-        </div>
-      </div>
-      <div class="dl-hint" id="dlHint">优化完成后可下载 Word 或 PDF（会话 30 分钟内有效）</div>
-      <div class="tabs" id="tabs">
-        <div class="tab active" id="tabStruct" onclick="switchTab('struct')">优化内容</div>
-        <div class="tab" id="tabPreview" onclick="switchTab('preview')">完整预览</div>
-      </div>
-      <div class="tab-panel show" id="panelStruct">
-        <div id="structBody"></div>
-      </div>
-      <div class="tab-panel" id="panelPreview">
-        <div class="preview" id="preview"></div>
-      </div>
-    </div>
-    <div class="match-card" id="matchCard">
-      <div class="match-top">
-        <div class="match-ring" id="matchRing">--</div>
-        <div>
-          <div style="font-size:15px;font-weight:700">岗位匹配度</div>
-          <div style="font-size:12px;color:var(--ink-3);margin-top:3px">AI 根据岗位 JD 评估的关键词覆盖情况</div>
-        </div>
-      </div>
-      <div class="match-kw" id="matchKw"></div>
-      <div class="match-sug" id="matchSug"></div>
-    </div>
-    <div class="blank-panel" id="blankPanel" style="display:none">
-      <div class="trim-head">空白字段补充</div>
-      <div class="trim-sub">以下字段在模板中留白，可直接补充后重新生成简历：</div>
-      <div class="blank-fields" id="blankFields"></div>
-      <div class="trim-actions">
-        <button class="btn-soft" id="blankApply">✓ 补充后重新生成</button>
-        <span class="trim-status" id="blankStatus"></span>
       </div>
     </div>
   </div>
@@ -530,7 +343,6 @@
 const $ = (id) => document.getElementById(id);
 let selectedTemplateId = null;
 let currentUser = null;
-let blankFields = null;
 
 // ── 用户登录态 ──
 const TOKEN_KEY = "resume_planet_token";
@@ -748,17 +560,6 @@ function requireLogin(action) {
 })();
 
 // ── 模板列表 ──
-const MODULE_LABELS = {
-  summary: "个人优势", work_experience: "工作经历", projects: "项目经历",
-  education: "教育背景", skills: "专业技能",
-};
-const STRUCT_ORDER = ["summary", "work_experience", "projects", "education", "skills"];
-const TPL_THUMBS = [
-  { cls: "t1", color: "#FFA500", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#FFA500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' },
-  { cls: "t2", color: "#3B82F6", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' },
-  { cls: "t3", color: "#10B981", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>' },
-  { cls: "t4", color: "#8B5CF6", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
-];
 
 // ── 轻提示 ──
 let toastTimer = null;
@@ -825,23 +626,6 @@ window.addEventListener("focus", function() {
     }, 300);
   }
 });
-
-function renderMatch(data) {
-  const card = $("matchCard");
-  const score = parseInt(data && data.match_score, 10);
-  if (!data || isNaN(score)) { card.classList.remove("show"); return; }
-  $("matchRing").textContent = score + "%";
-  const hue = score >= 80 ? "#3D7A50" : score >= 60 ? "#A8742A" : "#B3372E";
-  $("matchRing").style.background = "conic-gradient(" + hue + " " + score * 3.6 + "deg, #E8E3D9 0deg)";
-  $("matchRing").style.color = "#fff";
-  let kw = "";
-  (data.matched_keywords || []).forEach(function(k) { kw += '<span class="hit">✓ ' + escapeHtml(k) + '</span>'; });
-  (data.missing_keywords || []).forEach(function(k) { kw += '<span class="miss">✗ ' + escapeHtml(k) + '</span>'; });
-  $("matchKw").innerHTML = kw;
-  const sug = (data.suggestions || []).join("；");
-  $("matchSug").innerHTML = sug ? "优化建议：" + escapeHtml(sug) : "";
-  card.classList.add("show");
-}
 
 function renderTemplates() {
   const grid = $("tplGrid");
@@ -965,43 +749,6 @@ $("tplModal").addEventListener("click", function(e) {
   if (e.target === $("tplModal")) closeTplModal();
 });
 
-function showAlert(msg) {
-  const a = $("alert");
-  $("alertMsg").textContent = msg;
-  a.classList.add("show");
-}
-function hideAlert() { $("alert").classList.remove("show"); }
-
-function switchTab(name) {
-  const isStruct = name === "struct";
-  $("tabStruct").classList.toggle("active", isStruct);
-  $("tabPreview").classList.toggle("active", !isStruct);
-  $("panelStruct").classList.toggle("show", isStruct);
-  $("panelPreview").classList.toggle("show", !isStruct);
-}
-
-function renderStructured(data) {
-  const body = $("structBody");
-  if (!data || !data.name) {
-    body.innerHTML = '<div class="mod-empty">未提取到结构化内容</div>';
-    return;
-  }
-  const initial = ((data.name || "?").trim().charAt(0) || "?").toUpperCase();
-  let html = '<div class="struct-head">'
-    + '<span class="avatar">' + initial + '</span>'
-    + '<span><b>' + (data.name || "") + '</b></span>'
-    + (data.job_title ? '<span>求职意向：' + data.job_title + '</span>' : "")
-    + (data.contact ? '<span>' + data.contact + '</span>' : "")
-    + '</div>';
-  STRUCT_ORDER.forEach(function(key) {
-    const val = (data[key] || "").trim();
-    if (!val) return;
-    html += '<div class="mod-block"><div class="mod-head">' + (MODULE_LABELS[key] || key) + '</div>'
-      + '<div class="mod-body">' + escapeHtml(val) + '</div></div>';
-  });
-  body.innerHTML = html;
-}
-
 function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -1024,124 +771,11 @@ $("myResumesNavLink").addEventListener("click", function (e) {
 });
 document.querySelectorAll(".feature-card").forEach(function(card) {
   card.addEventListener("click", function() {
+    if (card.hasAttribute("data-editor")) { requireLogin(openResumeEditor); return; }
     scrollToId(card.dataset.target.slice(1));
   });
 });
-
-// ── 会话 ──
-let currentSession = null;
-
-
-// ── 空白字段补充（映射模板） ──
-function renderBlankFields(blanks) {
-  blankFields = blanks;
-  const panel = $("blankPanel");
-  if (!blanks || !blanks.length) {
-    panel.style.display = "none";
-    $("blankStatus").textContent = "";
-    return;
-  }
-  $("blankFields").innerHTML = blanks.map(function(f, i) {
-    return '<div class="blank-field"><label>' + escapeHtml(f.label) + '</label>'
-      + '<input id="blankIn' + i + '" data-key="' + escapeHtml(f.key) + '"'
-      + ' placeholder="点击补充' + escapeHtml(f.label) + '"></div>';
-  }).join("");
-  $("blankStatus").textContent = "";
-  panel.style.display = "block";
-}
-
-$("blankApply").addEventListener("click", async function() {
-  if (!currentSession || !blankFields) return;
-  const overrides = {};
-  blankFields.forEach(function(f, i) {
-    const inp = $("blankIn" + i);
-    if (inp && inp.value.trim()) overrides[f.key] = inp.value.trim();
-  });
-  if (!Object.keys(overrides).length) {
-    $("blankStatus").textContent = "请先补充至少一个字段";
-    return;
-  }
-  const st = $("blankStatus");
-  st.textContent = "正在重新生成…";
-  const fd = new FormData();
-  fd.append("session_id", currentSession);
-  fd.append("overrides", JSON.stringify(overrides));
-  fd.append("merge_mode", "merge");
-  try {
-    const resp = await fetch("/optimize/mapped-fill", { method: "POST", headers: authHeaders(), body: fd });
-    if (resp.status === 401) { clearAuth(); applyGuest(); AUTH.open("login"); return; }
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || "重新生成失败");
-    currentSession = data.session_id;
-    $("preview").textContent = data.optimized_text || "";
-    const base = "/download/" + data.session_id;
-    $("dlDocx").href = authUrl(base + "?format=docx");
-    $("dlPdf").href = authUrl(base + "?format=pdf");
-    renderBlankFields(data.mapped_blank_fields || null);
-    st.textContent = "已重新生成，可下载最新版本";
-    showToast("空白字段已补充并重新生成");
-    scrollToId("result");
-  } catch (e) {
-    st.textContent = "重新生成失败：" + e.message;
-  }
-});
-
-// ── AI 优化（简历经历 + 自我评价，智谱 GLM-4-Flash） ──
-
-function copyText(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    return navigator.clipboard.writeText(text).then(function() { return true; }, function() { return false; });
-  }
-  const ta = document.createElement("textarea");
-  ta.value = text;
-  document.body.appendChild(ta);
-  ta.select();
-  let ok = false;
-  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
-  document.body.removeChild(ta);
-  return Promise.resolve(ok);
-}
-$("optCopyBtn").addEventListener("click", function() {
-  const text = $("optResultBody").textContent || "";
-  if (!text) return;
-  copyText(text).then(function(ok) {
-    showToast(ok ? "已复制到剪贴板" : "复制失败，请手动选择复制");
-  });
-});
-
-$("optBtn").addEventListener("click", async function() {
-  hideAlert();
-  if (!currentUser) { requireLogin(function () { $("optBtn").click(); }); return; }
-  const jd = $("jdInput").value.trim();
-  const exp = $("expInput").value.trim();
-  if (!jd) { showAlert("请先粘贴完整招聘 JD（岗位职责 + 任职要求）"); return; }
-  if (!exp) { showAlert("请填写原始工作/实习/项目经历"); return; }
-  const btn = $("optBtn");
-  btn.disabled = true;
-  $("optProgress").classList.add("show");
-  $("optProgressText").textContent = "AI 正在拆解 JD 并优化…";
-  const fd = new FormData();
-  fd.append("jd", jd);
-  fd.append("experience", exp);
-  fd.append("self_evaluate", $("selfInput").value.trim());
-  fd.append("extra", $("extraInput").value.trim());
-  try {
-    const resp = await fetch("/api/optimize-experience-self", { method: "POST", headers: authHeaders(), body: fd });
-    if (resp.status === 401) { clearAuth(); applyGuest(); AUTH.open("login"); return; }
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.detail || "优化失败");
-    $("optResultTitle").textContent = "优化结果";
-    $("optResultBody").textContent = data.text || "";
-    $("optResult").classList.add("show");
-    showToast("AI 优化完成");
-    scrollToId("optResult");
-  } catch (e) {
-    showAlert("优化失败：" + e.message);
-  } finally {
-    btn.disabled = false;
-    $("optProgress").classList.remove("show");
-  }
-});
+$("navAiOptimize").addEventListener("click", function () { requireLogin(openResumeEditor); });
 
 // ── 启动：识别登录态渲染页面（游客同样可浏览模板中心） ──
 checkAuth().then(function(user) {

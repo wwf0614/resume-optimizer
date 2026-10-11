@@ -326,6 +326,47 @@ details.v3-more > summary { font-size: 12px; color: var(--v3-accent); cursor: po
 /* 内容预设按钮与菜单 */
 .v3-field-labelrow { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
 .v3-field-labelrow label { margin-bottom: 0; }
+
+/* 条目内 AI 优化按钮（GLM） */
+.v3-ai-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  margin-top: 8px; width: 100%;
+  border: 1px solid rgba(52,84,155,.35); background: var(--v3-accent-soft);
+  color: var(--v3-accent); font-size: 12px; font-weight: 600;
+  padding: 6px 10px; border-radius: 7px; cursor: pointer; font-family: inherit;
+  transition: background-color .15s, border-color .15s;
+}
+.v3-ai-btn svg { width: 13px; height: 13px; flex: none; }
+.v3-ai-btn:hover { background: #DEE7F6; border-color: var(--v3-accent); }
+.v3-ai-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* AI 优化弹窗 */
+.v3-ai-modal { width: 560px; }
+.v3-ai-field { margin-bottom: 12px; }
+.v3-ai-field label { display: block; font-size: 12px; color: var(--v3-ink-2); font-weight: 600; margin-bottom: 5px; }
+.v3-ai-field textarea, .v3-ai-field input {
+  width: 100%; border: 1px solid var(--v3-line); border-radius: 8px; background: #fff;
+  font-family: inherit; font-size: 12.5px; line-height: 1.6; color: var(--v3-ink);
+  padding: 8px 10px; transition: border-color .15s, box-shadow .15s; resize: vertical;
+}
+.v3-ai-field textarea:focus, .v3-ai-field input:focus { outline: none; border-color: var(--v3-accent); box-shadow: 0 0 0 3px rgba(52,84,155,.15); }
+.v3-ai-actions { display: flex; align-items: center; gap: 12px; margin: 4px 0 6px; }
+.v3-ai-hint { font-size: 12px; color: var(--v3-ink-3); }
+.v3-ai-result { margin-top: 14px; border-top: 1px dashed var(--v3-line); padding-top: 12px; }
+.v3-ai-result[hidden] { display: none; }
+.v3-ai-result-head { font-size: 13px; font-weight: 700; color: var(--v3-ink); }
+.v3-ai-result-head span { font-weight: 400; font-size: 11.5px; color: var(--v3-ink-3); margin-left: 8px; }
+.v3-ai-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.v3-ai-cols label { display: block; font-size: 11.5px; color: var(--v3-ink-3); margin-bottom: 4px; }
+.v3-ai-old, .v3-ai-new {
+  border: 1px solid var(--v3-line); border-radius: 8px; padding: 9px 11px;
+  font-size: 12.5px; line-height: 1.7; color: var(--v3-ink-2); white-space: pre-wrap;
+  word-break: break-word; max-height: 240px; overflow: auto; background: #FAFBFD;
+}
+.v3-ai-new { border-color: rgba(31,166,122,.4); background: #F4FBF8; color: var(--v3-ink); }
+.v3-ai-new:focus { outline: none; box-shadow: 0 0 0 3px rgba(52,84,155,.15); }
+.v3-ai-result-ops { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+@media (max-width: 620px) { .v3-ai-cols { grid-template-columns: 1fr; } }
 .v3-preset-btn {
   border: 1px solid var(--v3-line); background: #fff; color: var(--v3-ink-2);
   font-size: 11.5px; padding: 2px 9px; border-radius: 6px; cursor: pointer; font-family: inherit;

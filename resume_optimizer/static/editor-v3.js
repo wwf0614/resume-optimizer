@@ -75,13 +75,13 @@
       { k: 'major', l: '专业' }
     ].concat(DATE_FIELDS, [{ k: 'current', l: '至今', t: 'check' }, { k: 'content', l: '主修课程 / 校园表现', t: 'area' }]),
     internship: [{ k: 'company', l: '公司' }, { k: 'position', l: '岗位' }]
-      .concat(DATE_FIELDS, [{ k: 'current', l: '至今', t: 'check' }, { k: 'content', l: '工作内容', t: 'area', preset: true }]),
+      .concat(DATE_FIELDS, [{ k: 'current', l: '至今', t: 'check' }, { k: 'content', l: '工作内容', t: 'area', preset: true, ai: true }]),
     work: [{ k: 'company', l: '公司' }, { k: 'position', l: '职位' }]
-      .concat(DATE_FIELDS, [{ k: 'current', l: '至今', t: 'check' }, { k: 'content', l: '工作内容', t: 'area', preset: true }]),
+      .concat(DATE_FIELDS, [{ k: 'current', l: '至今', t: 'check' }, { k: 'content', l: '工作内容', t: 'area', preset: true, ai: true }]),
     project: [{ k: 'name', l: '项目名称' }, { k: 'role', l: '担任角色' },
-      { k: 'period', l: '时间段', t: 'period' }, { k: 'content', l: '项目描述', t: 'area', preset: true }],
+      { k: 'period', l: '时间段', t: 'period' }, { k: 'content', l: '项目描述', t: 'area', preset: true, ai: true }],
     campus: [{ k: 'name', l: '经历名称' }, { k: 'role', l: '担任角色' },
-      { k: 'period', l: '时间段', t: 'period' }, { k: 'content', l: '经历描述', t: 'area', preset: true }],
+      { k: 'period', l: '时间段', t: 'period' }, { k: 'content', l: '经历描述', t: 'area', preset: true, ai: true }],
     skill: [{ k: 'name', l: '技能' }, { k: 'level', l: '程度', ph: '精通/熟练/了解' }, { k: 'content', l: '说明', t: 'area' }],
     honor: [{ k: 'time', l: '时间', t: 'period' }, { k: 'name', l: '荣誉 / 证书' }, { k: 'issuer', l: '颁发单位' }]
   };
@@ -871,6 +871,90 @@
     if (e.key === 'Escape') closePresetMenu();
   });
 
+  /* ═════════ 条目内 AI 优化（GLM）：实习/工作/项目/校园/自我评价 ═════════ */
+
+  var AI_SECTION_LABEL = { internship: '实习经历', work: '工作经验', project: '项目经验', campus: '校园经历', self: '自我评价' };
+  var AI_JD_KEY = 'resume_planet_ai_jd';   // JD 会话记忆：同一次求职投多份简历不用反复粘贴
+  var aiState = { path: null, section: null, busy: false };
+
+  function aiSectionOfPath(path) {
+    var m = /^modules\.([a-z]+)(\.[0-9]+)?\.content$|^modules\.self$/.exec(path || '');
+    if (!m) return null;
+    var key = path.indexOf('modules.self') === 0 ? 'self' : m[1];
+    return AI_SECTION_LABEL[key] ? key : null;
+  }
+  function openAiModal(path) {
+    var section = aiSectionOfPath(path);
+    if (!section) return;
+    var content = String(getPath(path) || '').trim();
+    if (!content) { toast('请先填写本条' + AI_SECTION_LABEL[section] + '的描述内容', true); return; }
+    aiState.path = path; aiState.section = section;
+    $('aiModalTitle').textContent = 'AI优化 — GLM模型 · ' + AI_SECTION_LABEL[section];
+    $('aiModalSub').textContent = section === 'self'
+      ? '结合目标岗位 JD 重写自我评价，3~4 句、紧扣岗位需求，不编造你没有的经历'
+      : '结合目标岗位 JD 量化改写本条描述（STAR 法则），AI 不会编造你没有的经历';
+    try { $('aiJdInput').value = localStorage.getItem(AI_JD_KEY) || ''; } catch (e) { $('aiJdInput').value = ''; }
+    $('aiExtraInput').value = '';
+    $('aiResult').hidden = true;
+    $('aiHint').textContent = '';
+    $('aiOldText').textContent = content;
+    $('aiNewText').textContent = '';
+    $('aiModal').hidden = false;
+    setTimeout(function () {
+      var jdEl = $('aiJdInput');
+      if (jdEl && !jdEl.value) jdEl.focus();
+    }, 60);
+  }
+  function closeAiModal() { $('aiModal').hidden = true; aiState.path = null; aiState.section = null; }
+  function aiRun() {
+    if (aiState.busy || !aiState.path || !aiState.section) return;
+    var content = String(getPath(aiState.path) || '').trim();
+    if (!content) { toast('本条描述内容为空', true); return; }
+    var jd = $('aiJdInput').value.trim();
+    var extra = $('aiExtraInput').value.trim();
+    if (jd) { try { localStorage.setItem(AI_JD_KEY, jd); } catch (e) {} }
+    aiState.busy = true;
+    $('aiRunBtn').disabled = true;
+    $('aiRunBtnTxt').textContent = 'AI 优化中…';
+    $('aiHint').textContent = 'GLM 正在逐条打磨，约需 10~60 秒…';
+    $('aiResult').hidden = true;
+    apiPost('/api/ai/optimize-section', { section: aiState.section, content: content, jd: jd, extra: extra })
+      .then(function (d) {
+        $('aiNewText').textContent = (d && d.text) || '';
+        $('aiResult').hidden = false;
+        $('aiHint').textContent = '';
+        toast('AI 优化完成，对比确认后替换');
+      })
+      .catch(function (err) {
+        $('aiHint').textContent = '';
+        toast((err && err.message) || 'AI 优化失败，请稍后重试', true);
+      })
+      .finally(function () {
+        aiState.busy = false;
+        $('aiRunBtn').disabled = false;
+        $('aiRunBtnTxt').textContent = '开始优化';
+      });
+  }
+  function aiApply() {
+    if (!aiState.path) return;
+    var val = ($('aiNewText').textContent || '').trim();
+    if (!val) { toast('优化结果为空，无法替换', true); return; }
+    setPath(aiState.path, val);
+    markDirty(); buildLeftPanel(); renderCenter();
+    closeAiModal();
+    toast('已替换为本条 AI 优化结果');
+  }
+  function bindAiModal() {
+    $('aiModalClose').addEventListener('click', closeAiModal);
+    $('aiModal').addEventListener('click', function (e) { if (e.target === $('aiModal')) closeAiModal(); });
+    $('aiRunBtn').addEventListener('click', aiRun);
+    $('aiAgainBtn').addEventListener('click', aiRun);
+    $('aiApplyBtn').addEventListener('click', aiApply);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !$('aiModal').hidden) closeAiModal();
+    });
+  }
+
   /* ═════════ 左栏：内容表单 ═════════ */
 
   function fieldHtml(path, label, opts) {
@@ -880,7 +964,11 @@
         (opts.preset ? '<button type="button" class="v3-preset-btn' + (detectPreset(getPath(path)) ? ' is-on' : '') + '" data-preset-for="' + path + '">预设</button>' : '') +
         '</div>';
       return '<div class="v3-field v3-field-col">' + labelRow +
-        '<textarea class="v3-textarea" rows="3" data-path="' + path + '" placeholder="' + esc(opts.ph || '') + '">' + esc(getPath(path) || '') + '</textarea></div>';
+        '<textarea class="v3-textarea" rows="3" data-path="' + path + '" placeholder="' + esc(opts.ph || '') + '">' + esc(getPath(path) || '') + '</textarea>' +
+        (opts.ai ? '<button type="button" class="v3-ai-btn" data-ai-for="' + path + '" title="结合目标岗位JD，AI 量化改写本条描述">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9z"/></svg>' +
+          'AI优化 — GLM模型</button>' : '') +
+        '</div>';
     }
     if (opts.t === 'check') {
       return '<div class="v3-field"><label>' + esc(label) + '</label>' +
@@ -954,7 +1042,7 @@
       h += '<div class="v3-mod-body">';
 
       if (key === 'self' || key === 'custom') {
-        h += fieldHtml('modules.' + key, key === 'self' ? '自我评价' : '内容', { t: 'area', preset: key === 'self', ph: key === 'self' ? '用 3~5 句话概括你的优势…' : '自定义内容…' });
+        h += fieldHtml('modules.' + key, key === 'self' ? '自我评价' : '内容', { t: 'area', preset: key === 'self', ai: key === 'self', ph: key === 'self' ? '用 3~5 句话概括你的优势…' : '自定义内容…' });
       } else if (key === 'hobby') {
         h += fieldHtml('modules.hobby', '爱好', { ph: '用顿号分隔：阅读、羽毛球、摄影' });
       } else {
@@ -1071,6 +1159,12 @@
     body.addEventListener('click', function (e) {
       var pbtn = e.target.closest('.v3-preset-btn');
       if (pbtn) openPresetMenu(pbtn);
+    });
+
+    /* 条目内 AI 优化按钮（GLM） */
+    body.addEventListener('click', function (e) {
+      var abtn = e.target.closest('.v3-ai-btn');
+      if (abtn && abtn.dataset.aiFor) openAiModal(abtn.dataset.aiFor);
     });
 
     /* 拖拽排序（按住 ⋮⋮ 手柄才可拖，避免影响输入框选字） */
@@ -1502,6 +1596,7 @@
         buildRightPanel();
         renderCenter();
         bindTopbar();
+        bindAiModal();
         window.addEventListener('resize', debounce(layoutPaper, 150));
         setSavedTip(S.draftId ? 'is-ok' : '', S.draftId ? '已同步云端' : '自动保存已开启');
       });

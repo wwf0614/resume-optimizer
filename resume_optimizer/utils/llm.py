@@ -785,6 +785,61 @@ def optimize_experience_self(jd: str, experience: str, self_evaluate: str = "",
     return _call_exp_opt_long_text(prompt)
 
 
+# ══════════════════ 编辑器内：单模块 AI 优化（实习/工作/项目/校园/自我评价） ══════════════════
+
+SECTION_KINDS = {
+    "internship": "实习经历",
+    "work": "工作经验",
+    "project": "项目经验",
+    "campus": "校园经历",
+    "self": "自我评价",
+}
+
+_SECTION_EXPERIENCE_RULES = """你是一名拥有8年招聘HR经验的资深简历定制师，熟知国内ATS简历筛选的关键词抓取逻辑。请优化下面这份简历中「{label}」模块的描述内容。
+
+硬性规则：
+1. 严禁捏造不存在的数据、项目、工作内容或业绩，只能基于原始文字深挖、提炼、重组、量化；
+2. 每条描述采用「动词开头 + 工作内容 + 执行动作 + 落地结果」结构，套用STAR法则（场景→任务→行动→量化成果）；
+3. 量化只能使用原文中已有的数字与事实，绝对禁止新增任何原文没有的数字、百分比、金额或规模；
+   原文没有数据时，用工作价值、流程改进、职责范围等非数字方式表达成果；
+4. 剔除流水账空话（如"负责日常工作、完成交代任务"），弱化与目标岗位无关的琐碎内容；
+5. 若提供了目标岗位JD：提取其核心关键词与必备能力，自然融入描述（不生硬堆砌）；
+6. 输出格式与输入一致：逐条输出优化后的描述文本，每条一行（保留原有的编号或"- "前缀风格），
+   不要输出时间、公司、岗位名，不要任何解释、前言、结束语、标题或代码块标记；
+7. 语言：简体中文，务实干练、结果导向。"""
+
+_SECTION_SELF_RULES = """你是一名拥有8年招聘HR经验的资深简历定制师。请重写下面简历中的「自我评价」模块。
+
+硬性规则：
+1. 篇幅3~4句话，简洁凝练，杜绝长篇大论；
+2. 依次覆盖：适配岗位的专业能力 + 过往相关工作经验 + 沟通/细心/抗压等软实力（结合岗位具象化）+ 工作处事风格；
+3. 摒弃万能套话（性格乐观、吃苦耐劳、学习能力强等空洞语句），全部结合岗位需求具象表达；
+4. 严禁捏造原文没有的经历与数据，只能基于原始文字提炼重组；
+5. 若提供了目标岗位JD：紧扣岗位需求撰写，让HR一眼看出匹配度；
+6. 只输出优化后的自我评价正文，不要任何解释、前言、结束语、标题或代码块标记；
+7. 语言：简体中文。"""
+
+
+def optimize_section(section: str, content: str, jd: str = "", extra: str = "") -> str:
+    """编辑器内单模块优化：实习/工作/项目/校园经历或自我评价。
+    由智谱 GLM-4-Flash 驱动，返回优化后的纯文本（与输入行结构一致）。"""
+    label = SECTION_KINDS.get(section, "")
+    content = (content or "").strip()
+    jd = (jd or "").strip()
+    extra = (extra or "").strip()
+    if not label or not content:
+        return ""
+    base = _SECTION_SELF_RULES if section == "self" else _SECTION_EXPERIENCE_RULES.format(label=label)
+    prompt = base + "\n\n【本次输入】"
+    if jd:
+        prompt += "\n1. 目标岗位JD（岗位职责+任职要求）：\n" + jd[:2000]
+    prompt += "\n\n" + ("2" if jd else "1") + ". 待优化的原文：\n" + content
+    if extra:
+        n = "3" if jd else "2"
+        prompt += "\n\n" + n + ". 补充信息（求职行业/应届或社招/文风偏好等）：\n" + extra
+    return _call_exp_opt_long_text(prompt)
+
+
 # ── 整份简历 AI 生成（用户原始目标：一句话 / JD → 完整简历） ──
 FULL_RESUME_PROMPT = """你是一位资深简历顾问与 HR。根据用户提供的少量信息，生成一份完整、专业、可直接用于求职的中文简历内容。
 严格要求：
