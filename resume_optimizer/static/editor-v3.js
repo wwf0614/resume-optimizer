@@ -875,7 +875,7 @@
 
   var AI_SECTION_LABEL = { internship: '实习经历', work: '工作经验', project: '项目经验', campus: '校园经历', self: '自我评价' };
   var AI_JD_KEY = 'resume_planet_ai_jd';   // JD 会话记忆：同一次求职投多份简历不用反复粘贴
-  var aiState = { path: null, section: null, busy: false };
+  var aiState = { path: null, section: null, busy: false, undo: null };
 
   function aiSectionOfPath(path) {
     var m = /^modules\.([a-z]+)(\.[0-9]+)?\.content$|^modules\.self$/.exec(path || '');
@@ -888,13 +888,19 @@
     if (!section) return;
     var content = String(getPath(path) || '').trim();
     if (!content) { toast('请先填写本条' + AI_SECTION_LABEL[section] + '的描述内容', true); return; }
-    aiState.path = path; aiState.section = section;
+    aiState.path = path; aiState.section = section; aiState.undo = null;
     $('aiModalTitle').textContent = 'AI优化 — GLM模型 · ' + AI_SECTION_LABEL[section];
     $('aiModalSub').textContent = section === 'self'
       ? '结合目标岗位 JD 重写自我评价，3~4 句、紧扣岗位需求，不编造你没有的经历'
       : '结合目标岗位 JD 量化改写本条描述（STAR 法则），AI 不会编造你没有的经历';
     try { $('aiJdInput').value = localStorage.getItem(AI_JD_KEY) || ''; } catch (e) { $('aiJdInput').value = ''; }
     $('aiExtraInput').value = '';
+    $('aiNoteInput').value = '';
+    $('aiNoteField').hidden = true;
+    $('aiUndoBtn').hidden = true;
+    $('aiRunBtnTxt').textContent = '开始优化';
+    $('aiOldLabel').textContent = '原文';
+    $('aiResultSub').textContent = '对比原文确认后替换，不会自动改动';
     $('aiResult').hidden = true;
     $('aiHint').textContent = '';
     $('aiOldText').textContent = content;
@@ -905,13 +911,15 @@
       if (jdEl && !jdEl.value) jdEl.focus();
     }, 60);
   }
-  function closeAiModal() { $('aiModal').hidden = true; aiState.path = null; aiState.section = null; }
+  function closeAiModal() { $('aiModal').hidden = true; aiState.path = null; aiState.section = null; aiState.undo = null; }
   function aiRun() {
     if (aiState.busy || !aiState.path || !aiState.section) return;
     var content = String(getPath(aiState.path) || '').trim();
     if (!content) { toast('本条描述内容为空', true); return; }
     var jd = $('aiJdInput').value.trim();
     var extra = $('aiExtraInput').value.trim();
+    var note = $('aiNoteInput').value.trim();
+    if (note) extra = (extra ? extra + '\n' : '') + '上一版结果的调整要求：' + note;
     if (jd) { try { localStorage.setItem(AI_JD_KEY, jd); } catch (e) {} }
     aiState.busy = true;
     $('aiRunBtn').disabled = true;
@@ -920,9 +928,14 @@
     $('aiResult').hidden = true;
     apiPost('/api/ai/optimize-section', { section: aiState.section, content: content, jd: jd, extra: extra })
       .then(function (d) {
+        $('aiOldLabel').textContent = aiState.undo !== null ? '当前版本' : '原文';
+        $('aiOldText').textContent = content;
         $('aiNewText').textContent = (d && d.text) || '';
         $('aiResult').hidden = false;
+        $('aiResultSub').textContent = '对比确认后替换；可多轮迭代，替换后仍可回撤';
         $('aiHint').textContent = '';
+        $('aiNoteField').hidden = false;
+        $('aiRunBtnTxt').textContent = '再次优化';
         toast('AI 优化完成，对比确认后替换');
       })
       .catch(function (err) {
@@ -932,17 +945,34 @@
       .finally(function () {
         aiState.busy = false;
         $('aiRunBtn').disabled = false;
-        $('aiRunBtnTxt').textContent = '开始优化';
+        if ($('aiRunBtnTxt').textContent === 'AI 优化中…') $('aiRunBtnTxt').textContent = '开始优化';
       });
   }
   function aiApply() {
     if (!aiState.path) return;
     var val = ($('aiNewText').textContent || '').trim();
     if (!val) { toast('优化结果为空，无法替换', true); return; }
+    var cur = String(getPath(aiState.path) || '');
+    if (aiState.undo === null) aiState.undo = cur;   // 首次替换记录回撤点
     setPath(aiState.path, val);
     markDirty(); buildLeftPanel(); renderCenter();
-    closeAiModal();
-    toast('已替换为本条 AI 优化结果');
+    $('aiUndoBtn').hidden = false;
+    $('aiOldLabel').textContent = '替换前版本';
+    $('aiOldText').textContent = aiState.undo;
+    $('aiResultSub').textContent = '已替换。可继续「再次优化」，或点「回撤」恢复替换前版本';
+    toast('已替换为 AI 优化结果');
+  }
+  function aiUndo() {
+    if (!aiState.path || aiState.undo === null) return;
+    var restored = aiState.undo;
+    setPath(aiState.path, restored);
+    aiState.undo = null;
+    markDirty(); buildLeftPanel(); renderCenter();
+    $('aiUndoBtn').hidden = true;
+    $('aiOldLabel').textContent = '原文';
+    $('aiOldText').textContent = restored;
+    $('aiResultSub').textContent = '已回撤到替换前版本；可重新替换或再次优化';
+    toast('已回撤到替换前内容');
   }
   function bindAiModal() {
     $('aiModalClose').addEventListener('click', closeAiModal);
@@ -950,6 +980,7 @@
     $('aiRunBtn').addEventListener('click', aiRun);
     $('aiAgainBtn').addEventListener('click', aiRun);
     $('aiApplyBtn').addEventListener('click', aiApply);
+    $('aiUndoBtn').addEventListener('click', aiUndo);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !$('aiModal').hidden) closeAiModal();
     });

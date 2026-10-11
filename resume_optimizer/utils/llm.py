@@ -804,7 +804,8 @@ _SECTION_EXPERIENCE_RULES = """你是一名拥有8年招聘HR经验的资深简�
    原文没有数据时，用工作价值、流程改进、职责范围等非数字方式表达成果；
 4. 剔除流水账空话（如"负责日常工作、完成交代任务"），弱化与目标岗位无关的琐碎内容；
 5. 若提供了目标岗位JD：提取其核心关键词与必备能力，自然融入描述（不生硬堆砌）；
-6. 输出格式与输入一致：逐条输出优化后的描述文本，每条一行（保留原有的编号或"- "前缀风格），
+6. 输出格式与输入一致：逐条输出优化后的描述文本，每行直接使用原行的编号风格开头（如「1. xxx」）；
+   严禁「编号 + 短横线」双重前缀（如「1. - xxx」「- 1. xxx」都是错误格式），不要把行首改成"-"项目符号；
    不要输出时间、公司、岗位名，不要任何解释、前言、结束语、标题或代码块标记；
 7. 语言：简体中文，务实干练、结果导向。"""
 
@@ -837,7 +838,41 @@ def optimize_section(section: str, content: str, jd: str = "", extra: str = "") 
     if extra:
         n = "3" if jd else "2"
         prompt += "\n\n" + n + ". 补充信息（求职行业/应届或社招/文风偏好等）：\n" + extra
-    return _call_exp_opt_long_text(prompt)
+    return _clean_section_output(_call_exp_opt_long_text(prompt))
+
+
+# 编号前缀（1. / 1、/ 1）/ ①）与项目符号（- • · * ▪）
+_SEC_NUM_MARK_RE = re.compile(r"^(\s*(?:[0-9]{1,2}[.、．）)]|[①-⑳])\s*)")
+_SEC_BULLET_RE = re.compile(r"^\s*[-•·▪*]\s+")
+
+
+def _clean_section_output(text: str) -> str:
+    """清洗单模块优化输出：去掉「编号 + 短横线」双重前缀，保证可直接套用预设格式。
+
+    - 「1. - xxx」「1、- xxx」「①- xxx」→「1. xxx」
+    - 「- 1. xxx」→「1. xxx」
+    - 纯项目符号行（无编号）保持原样，交由前端预设统一。
+    """
+    if not text:
+        return ""
+    out = []
+    for line in text.split("\n"):
+        stripped = line.rstrip()
+        if not stripped.strip():
+            out.append(stripped)
+            continue
+        # 情况二：项目符号在前、编号在后 → 去掉前导符号
+        m_bul = _SEC_BULLET_RE.match(stripped)
+        if m_bul and _SEC_NUM_MARK_RE.match(stripped[m_bul.end():]):
+            stripped = stripped[m_bul.end():]
+        # 情况一：编号在前、项目符号紧随 → 去掉符号
+        m_num = _SEC_NUM_MARK_RE.match(stripped)
+        if m_num:
+            rest = stripped[m_num.end():]
+            rest = _SEC_BULLET_RE.sub("", rest, count=1)
+            stripped = m_num.group(1).rstrip() + " " + rest.lstrip()
+        out.append(stripped)
+    return "\n".join(out).strip()
 
 
 # ── 整份简历 AI 生成（用户原始目标：一句话 / JD → 完整简历） ──

@@ -157,6 +157,10 @@
       <label for="aiExtraInput">补充信息（选填）</label>
       <input id="aiExtraInput" type="text" placeholder="例如：私企 · 互联网行业 · 社招 · 文风简洁干练">
     </div>
+    <div class="v3-ai-field" id="aiNoteField" hidden>
+      <label for="aiNoteInput">优化要求（再次优化时填写，例如：更精炼 / 突出数据分析 / 少一些套话）</label>
+      <input id="aiNoteInput" type="text" placeholder="对上一版结果的调整要求…">
+    </div>
     <div class="v3-ai-actions">
       <button class="v3-btn v3-btn-primary" id="aiRunBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M12 3l1.9 5.7L19.6 10l-5.7 1.9L12 17.6l-1.9-5.7L4.4 10l5.7-1.9z"/></svg>
@@ -165,13 +169,14 @@
       <span class="v3-ai-hint" id="aiHint"></span>
     </div>
     <div class="v3-ai-result" id="aiResult" hidden>
-      <div class="v3-ai-result-head">优化结果<span>对比原文确认后替换，不会自动改动</span></div>
+      <div class="v3-ai-result-head">优化结果<span id="aiResultSub">对比原文确认后替换，不会自动改动</span></div>
       <div class="v3-ai-cols">
-        <div class="v3-ai-col"><label>原文</label><div class="v3-ai-old" id="aiOldText"></div></div>
-        <div class="v3-ai-col"><label>AI 优化后（可微调后再替换）</label><div class="v3-ai-new" id="aiNewText" contenteditable="true" spellcheck="false"></div></div>
+        <div class="v3-ai-col"><label id="aiOldLabel">原文</label><div class="v3-ai-old" id="aiOldText"></div></div>
+        <div class="v3-ai-col"><label>AI 优化后（可直接在此微调）</label><div class="v3-ai-new" id="aiNewText" contenteditable="true" spellcheck="false"></div></div>
       </div>
       <div class="v3-ai-result-ops">
-        <button class="v3-btn v3-btn-sm" id="aiAgainBtn">重新优化</button>
+        <button class="v3-btn v3-btn-sm" id="aiUndoBtn" hidden>↩ 回撤到替换前</button>
+        <button class="v3-btn v3-btn-sm" id="aiAgainBtn">再次优化</button>
         <button class="v3-btn v3-btn-primary v3-btn-sm" id="aiApplyBtn">✓ 用优化结果替换</button>
       </div>
     </div>
@@ -185,6 +190,6 @@
 <div class="v3-toast" id="toast" hidden></div>
 
 <script src="/static/resume-render.js?v=20261005d"></script>
-<script src="/static/editor-v3.js?v=20261005q"></script>
+<script src="/static/editor-v3.js?v=20261005r"></script>
 </body>
 </html>
