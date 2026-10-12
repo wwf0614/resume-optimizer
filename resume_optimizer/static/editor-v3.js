@@ -1429,6 +1429,7 @@
 
   function setSavedTip(state, text) {
     var t = $('savedTip');
+    if (!t) return;   // 顶栏已不展示同步状态胶囊（草稿默认自动存 MySQL），保留调用点作空操作
     t.textContent = text;
     t.className = 'v3-saved' + (state ? ' ' + state : '');
   }

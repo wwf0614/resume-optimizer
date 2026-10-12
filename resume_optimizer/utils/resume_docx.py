@@ -128,20 +128,35 @@ def _para_shading(p, fill: str) -> None:
     ppr.append(shd)
 
 
-def _table_bleed(tbl, total_cm: float, left_margin_cm: float = 1.5) -> None:
+def _table_bleed(tbl, total_cm: float, left_margin_cm: float = 1.5,
+                 zero_cell_margin: bool = False) -> None:
     """表格左侧负缩进顶到页面左缘，总宽 = 指定宽度（实现横幅/侧栏全幅贴边）。"""
     tbl.autofit = False
     tblpr = tbl._tbl.tblPr
     ind = OxmlElement("w:tblInd")
-    ind.set(qn("w:w"), str(-int(left_margin_cm * 567)))
+    ind.set(qn("w:w"), str(-int(round(left_margin_cm * 567))))
     ind.set(qn("w:type"), "dxa")
     tblpr.append(ind)
     tw = tblpr.find(qn("w:tblW"))
     if tw is None:
         tw = OxmlElement("w:tblW")
         tblpr.append(tw)
-    tw.set(qn("w:w"), str(int(total_cm * 567)))
+    tw.set(qn("w:w"), str(int(round(total_cm * 567))))
     tw.set(qn("w:type"), "dxa")
+    if zero_cell_margin:
+        # 清零单元格默认左右边距 0.19cm，让横幅文字缩进按版心精确对齐。
+        # OOXML 顺序要求：w:tblCellMar（含 w:left/w:right 子元素）须位于 w:tblLook 之前。
+        mar = OxmlElement("w:tblCellMar")
+        for side in ("w:left", "w:right"):
+            m = OxmlElement(side)
+            m.set(qn("w:w"), "0")
+            m.set(qn("w:type"), "dxa")
+            mar.append(m)
+        look = tblpr.find(qn("w:tblLook"))
+        if look is not None:
+            look.addprevious(mar)
+        else:
+            tblpr.append(mar)
 
 
 def _cell_shading(cell, fill: str) -> None:
@@ -316,9 +331,9 @@ def _section_title(t: _Target, ctx: _Ctx, label: str, icon: str,
         _para_shading(p, ctx.soft)
         pf = p.paragraph_format
         if ctx.family == "headerBar":
-            # 与横幅对齐：色块左右贴纸张边缘，文字仍在版心位
+            # 与横幅对齐：色块左右贴纸张边缘，文字回到版心位（与正文左缘齐平）
             pf.left_indent = Cm(-ctx.pad_cm)
-            pf.first_line_indent = Cm(ctx.pad_cm + 0.12)
+            pf.first_line_indent = Cm(ctx.pad_cm)
             pf.right_indent = Cm(-ctx.pad_cm)
         else:
             pf.left_indent = Cm(0.12)
@@ -380,7 +395,7 @@ def _basic_grid(t: _Target, ctx: _Ctx) -> None:
     tbl.autofit = False
     for idx, (label, v) in enumerate(ctx.extras):
         cell = tbl.rows[idx // 2].cells[idx % 2]
-        cell.width = Cm(9.0)
+        cell.width = Cm(round(ctx.content_cm / 2, 2))
         p = cell.paragraphs[0]
         _spacing(p, after=0, line=ctx.line_pt)
         run = p.add_run(f"{label}：{v}")
@@ -554,27 +569,31 @@ def _build_single_headerBar(doc: Document, ctx: _Ctx, banner: bool) -> None:
     """single / headerBar：headerBar 先画主色横幅（姓名/意向/联系方式 + 照片）。"""
     if banner:
         tbl = doc.add_table(rows=1, cols=2)
-        _table_bleed(tbl, 21.0)
+        # 负缩进 = 版心边距（跟随用户设置），总宽精确铺满 21cm 纸宽，两端贴边无留白
+        _table_bleed(tbl, 21.0, left_margin_cm=ctx.pad_cm, zero_cell_margin=True)
         left, right = tbl.rows[0].cells
-        left.width, right.width = Cm(16.6), Cm(4.4)
+        right_w = 3.4
+        left.width, right.width = Cm(21.0 - right_w), Cm(right_w)
         for c in (left, right):
             _cell_shading(c, ctx.primary)
+        pad_in = round(ctx.pad_cm, 2)   # 横幅文字内缩 = 版心留白，与正文左缘对齐
         lt = _Target(left)
         p = lt.para()
         _spacing(p, before=20, after=2)
-        p.paragraph_format.left_indent = Cm(0.4)
+        p.paragraph_format.left_indent = Cm(pad_in)
         run = p.add_run(ctx.name)
         _set_run_font(run, ctx.item_font(), ctx.name_pt, ctx.on_dark_text, bold=True)
         if ctx.intention:
             p = lt.para()
             _spacing(p, after=2)
-            p.paragraph_format.left_indent = Cm(0.4)
+            p.paragraph_format.left_indent = Cm(pad_in)
             run = p.add_run(ctx.intention)
             _set_run_font(run, ctx.item_font(), ctx.body_pt + 1.5, ctx.on_dark_text, bold=True)
         if ctx.contacts:
             p = lt.para()
             _spacing(p, after=10)
-            p.paragraph_format.left_indent = Cm(0.4)
+            p.paragraph_format.left_indent = Cm(pad_in)
+            p.paragraph_format.right_indent = Cm(0.3)
             run = p.add_run("  |  ".join(f"{label}：{v}" for label, v in ctx.contacts))
             _set_run_font(run, ctx.item_font(), ctx.body_pt, ctx.on_dark_muted)
         if ctx.photo_bytes:
@@ -582,6 +601,7 @@ def _build_single_headerBar(doc: Document, ctx: _Ctx, banner: bool) -> None:
             p = rt.para()
             _spacing(p, before=8, after=8)
             p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            p.paragraph_format.right_indent = Cm(pad_in)
             run = p.add_run()
             try:
                 run.add_picture(io.BytesIO(ctx.photo_bytes), width=Cm(2.6))
@@ -594,7 +614,7 @@ def _build_single_headerBar(doc: Document, ctx: _Ctx, banner: bool) -> None:
 
     t = _Target(doc)
     _basic_grid(t, ctx)
-    _render_sections(t, ctx, 18.0)
+    _render_sections(t, ctx, ctx.content_cm)
 
 
 def _build_sidebar(doc: Document, ctx: _Ctx) -> None:
@@ -700,6 +720,7 @@ def _build_two_col(doc: Document, ctx: _Ctx) -> None:
     _basic_grid(t, ctx)
 
     # 双栏分节（后续模块内容在两栏间流式排布）
+    col_gap = 0.75   # 425 dxa ≈ 0.75cm
     cols = doc.sections[0]._sectPr.xpath("./w:cols")
     if cols:
         cols[0].set(qn("w:num"), "2")
@@ -709,7 +730,7 @@ def _build_two_col(doc: Document, ctx: _Ctx) -> None:
         c.set(qn("w:num"), "2")
         c.set(qn("w:space"), "425")
         doc.sections[0]._sectPr.append(c)
-    _render_sections(t, ctx, 8.6)
+    _render_sections(t, ctx, round((ctx.content_cm - col_gap) / 2, 2))
 
 
 def generate_docx(resume: dict, theme: dict) -> bytes:
@@ -728,7 +749,7 @@ def generate_docx(resume: dict, theme: dict) -> bytes:
             tbl = doc.add_table(rows=1, cols=2)
             tbl.autofit = False
             left, right = tbl.rows[0].cells
-            left.width, right.width = Cm(15.4), Cm(2.6)
+            left.width, right.width = Cm(ctx.content_cm - 3.0), Cm(3.0)
             ht = _Target(left)
             p = ht.para()
             _spacing(p, after=4.5, line=ctx.name_line_pt)
@@ -762,11 +783,11 @@ def generate_docx(resume: dict, theme: dict) -> bytes:
             _spacing(p, after=4)
             _para_border_bottom(p, ctx.primary, 12)
             _basic_grid(t, ctx)
-            _render_sections(t, ctx, 18.0)
+            _render_sections(t, ctx, ctx.content_cm)
         else:
-            _head_block(t, ctx, 18.0)
+            _head_block(t, ctx, ctx.content_cm)
             _basic_grid(t, ctx)
-            _render_sections(t, ctx, 18.0)
+            _render_sections(t, ctx, ctx.content_cm)
     buf = io.BytesIO()
     doc.save(buf)
     return buf.getvalue()
